@@ -30,6 +30,20 @@ export const DEFAULT_TEXT_BACKGROUND = {
 	offsetY: 0,
 };
 
+export const DEFAULT_TEXT_SHADOW = {
+	enabled: false,
+	color: "#000000",
+	blur: 10,
+	distance: 5,
+	angle: 45,
+};
+
+export const DEFAULT_TEXT_STROKE = {
+	enabled: false,
+	color: "#000000",
+	thickness: 5,
+};
+
 export const DEFAULT_TEXT_ELEMENT: Omit<TextElement, "id"> = {
 	type: "text",
 	name: "Text",
@@ -44,6 +58,8 @@ export const DEFAULT_TEXT_ELEMENT: Omit<TextElement, "id"> = {
 	textDecoration: "none",
 	letterSpacing: DEFAULT_LETTER_SPACING,
 	lineHeight: DEFAULT_LINE_HEIGHT,
+	shadow: DEFAULT_TEXT_SHADOW,
+	stroke: DEFAULT_TEXT_STROKE,
 	duration: TIMELINE_CONSTANTS.DEFAULT_ELEMENT_DURATION,
 	startTime: 0,
 	trimStart: 0,

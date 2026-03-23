@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 import useDeepCompareEffect from "use-deep-compare-effect";
 import { useEditor } from "@/hooks/use-editor";
-import { useRafLoop } from "@/hooks/use-raf-loop";
 import { useContainerSize } from "@/hooks/use-container-size";
 import { useFullscreen } from "@/hooks/use-fullscreen";
 import { CanvasRenderer } from "@/services/renderer/canvas-renderer";
@@ -34,9 +33,9 @@ export function PreviewPanel() {
 	return (
 		<div
 			ref={containerRef}
-			className="panel bg-background relative flex size-full min-h-0 min-w-0 flex-col rounded-sm border"
+			className="panel bg-transparent relative flex size-full min-h-0 min-w-0 flex-col"
 		>
-			<div className="flex min-h-0 min-w-0 flex-1 items-center justify-center p-2 pb-0">
+			<div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
 				<PreviewCanvas
 					onToggleFullscreen={toggleFullscreen}
 					containerRef={containerRef}
@@ -136,37 +135,42 @@ function PreviewCanvas({
 
 	const renderTree = editor.renderer.getRenderTree();
 
-	const render = useCallback(() => {
-		if (canvasRef.current && renderTree && !renderingRef.current) {
-			const time = editor.playback.getCurrentTime();
-			const lastFrameTime = getLastFrameTime({
-				duration: renderTree.duration,
-				fps: renderer.fps,
-			});
-			const renderTime = Math.min(time, lastFrameTime);
-			const frame = Math.floor(renderTime * renderer.fps);
+	useEffect(() => {
+		const handleTimeUpdate = (time: number) => {
+			if (canvasRef.current && renderTree && !renderingRef.current) {
+				const lastFrameTime = getLastFrameTime({
+					duration: renderTree.duration,
+					fps: renderer.fps,
+				});
+				const renderTime = Math.min(time, lastFrameTime);
+				const frame = Math.floor(renderTime * renderer.fps);
 
-			if (
-				frame !== lastFrameRef.current ||
-				renderTree !== lastSceneRef.current
-			) {
-				renderingRef.current = true;
-				lastSceneRef.current = renderTree;
-				lastFrameRef.current = frame;
-				renderer
-					.renderToCanvas({
-						node: renderTree,
-						time: renderTime,
-						targetCanvas: canvasRef.current,
-					})
-					.then(() => {
-						renderingRef.current = false;
-					});
+				if (
+					frame !== lastFrameRef.current ||
+					renderTree !== lastSceneRef.current
+				) {
+					renderingRef.current = true;
+					lastSceneRef.current = renderTree;
+					lastFrameRef.current = frame;
+					renderer
+						.renderToCanvas({
+							node: renderTree,
+							time: renderTime,
+							targetCanvas: canvasRef.current,
+						})
+						.then(() => {
+							renderingRef.current = false;
+						});
+				}
 			}
-		}
-	}, [renderer, renderTree, editor.playback]);
+		};
 
-	useRafLoop(render);
+		// Initial render
+		handleTimeUpdate(editor.playback.getCurrentTime());
+
+		const unsubscribe = editor.playback.subscribeTime(handleTimeUpdate);
+		return unsubscribe;
+	}, [renderer, renderTree, editor.playback]);
 
 	return (
 		<div

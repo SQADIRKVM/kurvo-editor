@@ -565,6 +565,21 @@ function MediaActions({
 					</TooltipContent>
 				</Tooltip>
 			</TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Button
+						variant="outline"
+						onClick={() => toast.info("VN Template Import", { description: "Scan your VN QR code in the next step" })}
+						disabled={isProcessing}
+						size="sm"
+						className="items-center justify-center border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/10 text-violet-400 gap-1.5 px-3"
+					>
+						<HugeiconsIcon icon={CloudUploadIcon} className="size-4" />
+						VN Template
+					</Button>
+				</TooltipTrigger>
+				<TooltipContent>Import structure from VN Editor QR code</TooltipContent>
+			</Tooltip>
 			<Button
 				variant="outline"
 				onClick={onImport}

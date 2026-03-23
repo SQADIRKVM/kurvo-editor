@@ -30,20 +30,20 @@ export function PanelView({
 			{...rest}
 		>
 			{!hideHeader && (
-				<div className="bg-background h-11 shrink-0 px-4 pr-2 flex items-center justify-between border-b">
-					<span className="text-muted-foreground text-sm">{title}</span>
+				<div className="bg-background h-10 shrink-0 px-3 flex items-center justify-between border-b">
+					<span className="text-muted-foreground/60 text-[11px] font-medium uppercase tracking-wider">{title}</span>
 					{actions}
 				</div>
 			)}
 			<div
 				className={cn(
 					"scrollbar-thin size-full overflow-y-auto",
-					hideHeader ? "pt-4" : "pt-2",
+					hideHeader ? "pt-2" : "pt-0",
 				)}
 				ref={scrollRef}
 				onScroll={onScroll}
 			>
-				<div className={cn("w-full flex-1 px-2 pt-0", contentClassName)}>
+				<div className={cn("w-full flex-1 pt-0", contentClassName)}>
 					{children}
 				</div>
 			</div>

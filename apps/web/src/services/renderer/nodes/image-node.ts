@@ -70,10 +70,11 @@ export class ImageNode extends VisualNode<ImageNodeParams> {
 		this.cachedSource = loadImageSource(params.url, params.maxSourceSize);
 	}
 
-	async render({ renderer, time }: { renderer: CanvasRenderer; time: number }) {
-		await super.render({ renderer, time });
+	async render({ renderer, time, ignoreHidden }: { renderer: CanvasRenderer; time: number; ignoreHidden?: boolean }) {
+		if (!ignoreHidden && !this.isShowingAt(time)) return;
+		await super.render({ renderer, time, ignoreHidden });
 
-		if (!this.isInRange({ time })) {
+		if (!ignoreHidden && !this.isInRange({ time })) {
 			return;
 		}
 

@@ -1,4 +1,4 @@
-import { webEnv } from "@opencut/env/web";
+import { webEnv } from "@kurvo/env/web";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -198,11 +198,24 @@ export async function GET(request: NextRequest) {
 
 		const baseUrl = "https://freesound.org/apiv2/search/text/";
 
+		const apiKey = webEnv.FREESOUND_API_KEY;
+		console.log("Sounds search API key configured:", !!apiKey, apiKey === "your_api_key_here" ? "(placeholder)" : "(set)");
+
+		if (!apiKey || apiKey.length < 5 || apiKey.includes("your_api_key_here") || apiKey.includes("your_client_id_here")) {
+			return NextResponse.json(
+				{
+					error: "Sounds API not configured",
+					message: "The Freesound API key is missing or not configured. Please add a valid FREESOUND_API_KEY to your .env.local file.",
+				},
+				{ status: 401 },
+			);
+		}
+
 		const sortParam = buildSortParameter({ query, sort });
 
 		const params = new URLSearchParams({
 			query: query || "",
-			token: webEnv.FREESOUND_API_KEY,
+			token: apiKey,
 			page: page.toString(),
 			page_size: pageSize.toString(),
 			sort: sortParam,
@@ -272,8 +285,15 @@ export async function GET(request: NextRequest) {
 		return NextResponse.json(responseValidation.data);
 	} catch (error) {
 		console.error("Error searching sounds:", error);
+		if (error instanceof Error) {
+			console.error("Error message:", error.message);
+			console.error("Error stack:", error.stack);
+		}
 		return NextResponse.json(
-			{ error: "Internal server error" },
+			{ 
+				error: "Internal server error",
+				details: error instanceof Error ? error.message : String(error)
+			},
 			{ status: 500 },
 		);
 	}

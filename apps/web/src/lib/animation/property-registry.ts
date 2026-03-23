@@ -11,6 +11,8 @@ import {
 	CORNER_RADIUS_MAX,
 	CORNER_RADIUS_MIN,
 	DEFAULT_TEXT_BACKGROUND,
+	DEFAULT_TEXT_SHADOW,
+	DEFAULT_TEXT_STROKE,
 } from "@/constants/text-constants";
 import { isVisualElement } from "@/lib/timeline/element-utils";
 
@@ -229,6 +231,34 @@ const ANIMATION_PROPERTY_REGISTRY: Record<
 				? {
 						...element,
 						background: { ...element.background, cornerRadius: value as number },
+					}
+				: element,
+	},
+	"shadow.color": {
+		valueKind: "color",
+		defaultInterpolation: "linear",
+		supportsElement: ({ element }) => element.type === "text",
+		getValue: ({ element }) =>
+			element.type === "text" ? element.shadow?.color ?? DEFAULT_TEXT_SHADOW.color : null,
+		setValue: ({ element, value }) =>
+			element.type === "text"
+				? {
+						...element,
+						shadow: { ...(element.shadow ?? DEFAULT_TEXT_SHADOW), color: value as string },
+					}
+				: element,
+	},
+	"stroke.color": {
+		valueKind: "color",
+		defaultInterpolation: "linear",
+		supportsElement: ({ element }) => element.type === "text",
+		getValue: ({ element }) =>
+			element.type === "text" ? element.stroke?.color ?? DEFAULT_TEXT_STROKE.color : null,
+		setValue: ({ element, value }) =>
+			element.type === "text"
+				? {
+						...element,
+						stroke: { ...(element.stroke ?? DEFAULT_TEXT_STROKE), color: value as string },
 					}
 				: element,
 	},

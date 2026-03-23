@@ -6,9 +6,10 @@ import {
 	MagicWand05Icon,
 	MusicNote03Icon,
 	TextIcon,
+	Exchange01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { OcVideoIcon } from "@opencut/ui/icons";
+import { OcVideoIcon } from "@kurvo/ui/icons";
 
 export const DEFAULT_TRANSFORM: Transform = {
 	scale: 1,
@@ -75,6 +76,17 @@ export const TRACK_CONFIG: Record<
 		icon: (
 			<HugeiconsIcon
 				icon={MagicWand05Icon}
+				className="text-muted-foreground size-4 shrink-0"
+			/>
+		),
+	},
+	transition: {
+		background: "bg-[#8b5cf6]",
+		height: 25,
+		defaultName: "Transition track",
+		icon: (
+			<HugeiconsIcon
+				icon={Exchange01Icon}
 				className="text-muted-foreground size-4 shrink-0"
 			/>
 		),

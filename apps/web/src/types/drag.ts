@@ -27,8 +27,14 @@ export interface EffectDragData extends BaseDragData {
 	targetElementTypes: VisualElement["type"][];
 }
 
+export interface TransitionDragData extends BaseDragData {
+	type: "transition";
+	transitionType: string;
+}
+
 export type TimelineDragData =
 	| MediaDragData
 	| TextDragData
 	| StickerDragData
-	| EffectDragData;
+	| EffectDragData
+	| TransitionDragData;

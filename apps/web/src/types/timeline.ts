@@ -19,7 +19,7 @@ export interface TScene {
 	updatedAt: Date;
 }
 
-export type TrackType = "video" | "text" | "audio" | "sticker" | "effect";
+export type TrackType = "video" | "text" | "audio" | "sticker" | "effect" | "transition";
 
 interface BaseTrack {
 	id: string;
@@ -58,12 +58,18 @@ export interface EffectTrack extends BaseTrack {
 	hidden: boolean;
 }
 
+export interface TransitionTrack extends BaseTrack {
+	type: "transition";
+	elements: TransitionElement[];
+}
+
 export type TimelineTrack =
 	| VideoTrack
 	| TextTrack
 	| AudioTrack
 	| StickerTrack
-	| EffectTrack;
+	| EffectTrack
+	| TransitionTrack;
 
 export type { Transform } from "./rendering";
 
@@ -72,6 +78,15 @@ interface BaseAudioElement extends BaseTimelineElement {
 	volume: number;
 	muted?: boolean;
 	buffer?: AudioBuffer;
+	fadeInDuration?: number;
+	fadeOutDuration?: number;
+	speed: number;
+	voiceChanger?: string;
+	autoDucking?: boolean;
+	noiseReduction?: boolean;
+	voiceEnchancement?: boolean;
+	equalizer?: string;
+	keepPitch?: boolean;
 }
 
 export interface UploadAudioElement extends BaseAudioElement {
@@ -97,6 +112,17 @@ interface BaseTimelineElement {
 	animations?: ElementAnimations;
 }
 
+export interface CanvasFormat {
+	type: "color" | "blur";
+	color?: string;
+	blurLevel?: number;
+}
+export interface ChromaKeyConfig {
+	color: string; // hex color to key out e.g. "#00FF00"
+	similarity: number; // 0–100
+	smoothness: number; // 0–100
+}
+
 export interface VideoElement extends BaseTimelineElement {
 	type: "video";
 	mediaId: string;
@@ -104,8 +130,21 @@ export interface VideoElement extends BaseTimelineElement {
 	hidden?: boolean;
 	transform: Transform;
 	opacity: number;
+	volume: number;
+	fadeInDuration?: number;
+	fadeOutDuration?: number;
+	autoDucking?: boolean;
+	noiseReduction?: boolean;
+	voiceEnchancement?: boolean;
+	voiceChanger?: string;
+	equalizer?: string;
+	keepPitch?: boolean;
+	speed: number;
 	blendMode?: BlendMode;
 	effects?: Effect[];
+	canvasFormat?: CanvasFormat;
+	stabilization?: number;
+	chromaKey?: ChromaKeyConfig;
 }
 
 export interface ImageElement extends BaseTimelineElement {
@@ -116,6 +155,7 @@ export interface ImageElement extends BaseTimelineElement {
 	opacity: number;
 	blendMode?: BlendMode;
 	effects?: Effect[];
+	canvasFormat?: CanvasFormat;
 }
 
 export interface TextBackground {
@@ -126,6 +166,20 @@ export interface TextBackground {
 	paddingY?: number;
 	offsetX?: number;
 	offsetY?: number;
+}
+
+export interface TextShadow {
+	enabled: boolean;
+	color: string;
+	blur: number;
+	distance: number;
+	angle: number;
+}
+
+export interface TextStroke {
+	enabled: boolean;
+	color: string;
+	thickness: number;
 }
 
 export interface TextElement extends BaseTimelineElement {
@@ -141,6 +195,8 @@ export interface TextElement extends BaseTimelineElement {
 	textDecoration: "none" | "underline" | "line-through";
 	letterSpacing?: number;
 	lineHeight?: number;
+	shadow?: TextShadow;
+	stroke?: TextStroke;
 	hidden?: boolean;
 	transform: Transform;
 	opacity: number;
@@ -164,6 +220,12 @@ export interface EffectElement extends BaseTimelineElement {
 	params: EffectParamValues;
 }
 
+export interface TransitionElement extends BaseTimelineElement {
+	type: "transition";
+	transitionType: string;
+	params: Record<string, any>;
+}
+
 export type VisualElement =
 	| VideoElement
 	| ImageElement
@@ -181,7 +243,8 @@ export type TimelineElement =
 	| ImageElement
 	| TextElement
 	| StickerElement
-	| EffectElement;
+	| EffectElement
+	| TransitionElement;
 
 export type ElementType = TimelineElement["type"];
 
@@ -195,13 +258,15 @@ export type CreateImageElement = Omit<ImageElement, "id">;
 export type CreateTextElement = Omit<TextElement, "id">;
 export type CreateStickerElement = Omit<StickerElement, "id">;
 export type CreateEffectElement = Omit<EffectElement, "id">;
+export type CreateTransitionElement = Omit<TransitionElement, "id">;
 export type CreateTimelineElement =
 	| CreateAudioElement
 	| CreateVideoElement
 	| CreateImageElement
 	| CreateTextElement
 	| CreateStickerElement
-	| CreateEffectElement;
+	| CreateEffectElement
+	| CreateTransitionElement;
 
 export interface ElementDragState {
 	isDragging: boolean;

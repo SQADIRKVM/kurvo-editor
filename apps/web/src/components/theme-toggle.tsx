@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
 import { cn } from "@/utils/ui";
@@ -18,6 +19,27 @@ export function ThemeToggle({
 	onToggle,
 }: ThemeToggleProps) {
 	const { theme, setTheme } = useTheme();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (!mounted) {
+		return (
+			<Button
+				size="icon"
+				variant="ghost"
+				className={cn("size-8", className)}
+				disabled
+			>
+				<HugeiconsIcon
+					icon={Sun03Icon}
+					className={cn("!size-[1.1rem]", iconClassName)}
+				/>
+			</Button>
+		);
+	}
 
 	return (
 		<Button

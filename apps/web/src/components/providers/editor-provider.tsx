@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEditor } from "@/hooks/use-editor";
+import { ProjectNotFoundError } from "@/core/managers/project-manager";
 import {
 	useKeybindingsListener,
 	useKeybindingDisabler,
 } from "@/hooks/use-keybindings";
 import { useEditorActions } from "@/hooks/actions/use-editor-actions";
+import { useAIActionBridge } from "@/hooks/use-ai-action-bridge";
 import { prefetchFontAtlas } from "@/lib/fonts/google-fonts";
 
 interface EditorProviderProps {
@@ -47,10 +49,7 @@ export function EditorProvider({ projectId, children }: EditorProviderProps) {
 			} catch (err) {
 				if (cancelled) return;
 
-				const isNotFound =
-					err instanceof Error &&
-					(err.message.includes("not found") ||
-						err.message.includes("does not exist"));
+				const isNotFound = err instanceof ProjectNotFoundError;
 
 				if (isNotFound) {
 					try {
@@ -134,5 +133,6 @@ function EditorRuntimeBindings() {
 
 	useEditorActions();
 	useKeybindingsListener();
+	useAIActionBridge();
 	return null;
 }

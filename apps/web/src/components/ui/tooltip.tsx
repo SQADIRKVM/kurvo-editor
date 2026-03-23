@@ -15,7 +15,7 @@ const tooltipVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: "bg-popover text-popover-foreground border px-3 py-1.5",
+				default: "bg-violet-600 text-white border border-violet-400 px-3 py-1.5 font-medium shadow-2xl",
 				destructive:
 					"bg-destructive/10 text-destructive dark:bg-destructive/20 border-destructive [border-width:0.5px]",
 				outline: "border-border",
@@ -42,34 +42,38 @@ interface TooltipContentProps
 	extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>,
 		VariantProps<typeof tooltipVariants> {}
 
+const TooltipPortal = TooltipPrimitive.Portal;
+
 const TooltipContent = React.forwardRef<
 	React.ElementRef<typeof TooltipPrimitive.Content>,
 	TooltipContentProps
 >(({ className, sideOffset = 4, variant, ...props }, ref) => (
-	<TooltipPrimitive.Content
-		ref={ref}
-		sideOffset={sideOffset}
-		className={cn(tooltipVariants({ variant }), className)}
-		{...props}
-	>
-		{variant === "sidebar" && (
-			<svg
-				width="6"
-				height="10"
-				viewBox="0 0 6 10"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
-				className="absolute top-1/2 left-[-6px] -translate-y-1/2"
-				aria-hidden="true"
-			>
-				<path
-					d="M6 0L0 5L6 10V0Z"
-					className="fill-white/80 dark:fill-[#413F3E]"
-				/>
-			</svg>
-		)}
-		{props.children}
-	</TooltipPrimitive.Content>
+	<TooltipPortal>
+		<TooltipPrimitive.Content
+			ref={ref}
+			sideOffset={sideOffset}
+			className={cn(tooltipVariants({ variant }), className)}
+			{...props}
+		>
+			{variant === "sidebar" && (
+				<svg
+					width="6"
+					height="10"
+					viewBox="0 0 6 10"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+					className="absolute top-1/2 left-[-6px] -translate-y-1/2"
+					aria-hidden="true"
+				>
+					<path
+						d="M6 0L0 5L6 10V0Z"
+						className="fill-white/80 dark:fill-[#413F3E]"
+					/>
+				</svg>
+			)}
+			{props.children}
+		</TooltipPrimitive.Content>
+	</TooltipPortal>
 ));
 TooltipContent.displayName = TooltipPrimitive.Content.displayName;
 

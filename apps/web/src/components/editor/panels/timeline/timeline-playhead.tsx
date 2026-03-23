@@ -8,6 +8,7 @@ import {
 } from "@/lib/timeline";
 import { useTimelinePlayhead } from "@/hooks/timeline/use-timeline-playhead";
 import { useEditor } from "@/hooks/use-editor";
+import { useCurrentTime } from "@/hooks/use-current-time";
 
 interface TimelinePlayheadProps {
 	zoomLevel: number;
@@ -32,6 +33,7 @@ export function TimelinePlayhead({
 	const duration = editor.timeline.getTotalDuration();
 	const internalPlayheadRef = useRef<HTMLDivElement>(null);
 	const playheadRef = externalPlayheadRef || internalPlayheadRef;
+	const currentTime = useCurrentTime();
 
 	const { playheadPosition, handlePlayheadMouseDown } = useTimelinePlayhead({
 		zoomLevel,
@@ -39,6 +41,7 @@ export function TimelinePlayhead({
 		rulerScrollRef,
 		tracksScrollRef,
 		playheadRef,
+		currentTime,
 	});
 
 	const timelineContainerHeight =

@@ -6,14 +6,11 @@ import type { TimelineTrack } from "@/types/timeline";
 import type { TimelineElement as TimelineElementType } from "@/types/timeline";
 import type { SnapPoint } from "@/lib/timeline/snap-utils";
 import { TIMELINE_CONSTANTS } from "@/constants/timeline-constants";
-import { useEdgeAutoScroll } from "@/hooks/timeline/use-edge-auto-scroll";
-import type { ElementDragState } from "@/types/timeline";
 import { useEditor } from "@/hooks/use-editor";
 
 interface TimelineTrackContentProps {
 	track: TimelineTrack;
 	zoomLevel: number;
-	dragState: ElementDragState;
 	rulerScrollRef: React.RefObject<HTMLDivElement | null>;
 	tracksScrollRef: React.RefObject<HTMLDivElement | null>;
 	lastMouseXRef: React.RefObject<number>;
@@ -38,7 +35,6 @@ interface TimelineTrackContentProps {
 export function TimelineTrackContent({
 	track,
 	zoomLevel,
-	dragState,
 	rulerScrollRef,
 	tracksScrollRef,
 	lastMouseXRef,
@@ -56,16 +52,8 @@ export function TimelineTrackContent({
 
 	const duration = editor.timeline.getTotalDuration();
 
-	useEdgeAutoScroll({
-		isActive: dragState.isDragging,
-		getMouseClientX: () => lastMouseXRef.current ?? 0,
-		rulerScrollRef,
-		tracksScrollRef,
-		contentWidth: duration * TIMELINE_CONSTANTS.PIXELS_PER_SECOND * zoomLevel,
-	});
-
 	return (
-		<button
+		<div
 			className="size-full"
 			onClick={(event) => {
 				if (shouldIgnoreClick?.()) return;
@@ -75,7 +63,6 @@ export function TimelineTrackContent({
 				event.preventDefault();
 				onTrackMouseDown?.(event);
 			}}
-			type="button"
 		>
 			<div className="relative h-full min-w-full">
 				{track.elements.length === 0 ? (
@@ -102,13 +89,12 @@ export function TimelineTrackContent({
 								onElementClick={(event, element) =>
 									onElementClick({ event, element, track })
 								}
-								dragState={dragState}
 								isDropTarget={element.id === targetElementId}
 							/>
 						);
 					})
 				)}
 			</div>
-		</button>
+		</div>
 	);
 }

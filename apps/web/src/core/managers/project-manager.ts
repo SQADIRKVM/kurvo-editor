@@ -30,6 +30,13 @@ import { DEFAULT_TIMELINE_VIEW_STATE } from "@/constants/timeline-constants";
 import { loadFonts } from "@/lib/fonts/google-fonts";
 import { collectFontFamilies } from "@/lib/timeline/element-utils";
 
+export class ProjectNotFoundError extends Error {
+	constructor(id: string) {
+		super(`Project with id ${id} not found`);
+		this.name = "ProjectNotFoundError";
+	}
+}
+
 export interface MigrationState {
 	isMigrating: boolean;
 	fromVersion: number | null;
@@ -137,7 +144,7 @@ export class ProjectManager {
 		try {
 			const result = await storageService.loadProject({ id });
 			if (!result) {
-				throw new Error(`Project with id ${id} not found`);
+				throw new ProjectNotFoundError(id);
 			}
 
 			const project = result.project;
@@ -164,7 +171,9 @@ export class ProjectManager {
 				}
 			}
 		} catch (error) {
-			console.error("Failed to load project:", error);
+			if (!(error instanceof ProjectNotFoundError)) {
+				console.error("Failed to load project:", error);
+			}
 			throw error;
 		} finally {
 			this.isLoading = false;

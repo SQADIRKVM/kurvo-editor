@@ -32,8 +32,10 @@ import {
 	PauseIcon,
 	PlayIcon,
 	PlusSignIcon,
+	MusicNote03Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export function SoundsView() {
 	return (
@@ -136,7 +138,12 @@ function SoundEffectsView() {
 
 				if (!shouldIgnore) {
 					if (!response.ok) {
-						throw new Error(`Failed to fetch: ${response.status}`);
+						const errorData = await response.json().catch(() => ({}));
+						const errorMessage = errorData.message || errorData.details || errorData.error || `Failed to fetch: ${response.status}`;
+						console.error("Failed to fetch top sounds:", errorMessage);
+						setError({ error: errorMessage });
+						setLoading({ loading: false });
+						return;
 					}
 
 					const data = await response.json();
@@ -294,9 +301,11 @@ function SoundEffectsView() {
 							/>
 						))}
 						{!isLoading && !isSearching && displayedSounds.length === 0 && (
-							<div className="text-muted-foreground text-sm">
-								{searchQuery ? "No sounds found" : "No sounds available"}
-							</div>
+							<EmptyState 
+								icon={<HugeiconsIcon icon={MusicNote03Icon} className="size-10 text-muted-foreground/30" />}
+								title={searchQuery ? "No sounds found" : "Library is empty"}
+								description={searchQuery ? `Try searching for something else than "${searchQuery}"` : "Discover professional sound effects for your edit"}
+							/>
 						)}
 						{isLoadingMore && (
 							<div className="text-muted-foreground py-4 text-center text-sm">
@@ -406,7 +415,7 @@ function SavedSoundsView() {
 
 	if (savedSounds.length === 0) {
 		return (
-			<div className="bg-background flex h-full flex-col items-center justify-center gap-3 p-4">
+			<div className="bg-transparent flex h-full flex-col items-center justify-center gap-3 p-4">
 				<HugeiconsIcon
 					icon={FavouriteIcon}
 					className="text-muted-foreground size-10"

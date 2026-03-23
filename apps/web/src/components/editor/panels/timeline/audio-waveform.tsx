@@ -58,10 +58,6 @@ export function AudioWaveform({
 			if (!waveformRef.current || (!audioUrl && !audioBuffer)) return;
 
 			try {
-				if (ws) {
-					wavesurfer.current = null;
-				}
-
 				const newWaveSurfer = WaveSurfer.create({
 					container: waveformRef.current,
 					waveColor: "rgba(255, 255, 255, 0.6)",
@@ -77,9 +73,7 @@ export function AudioWaveform({
 				if (mounted) {
 					wavesurfer.current = newWaveSurfer;
 				} else {
-					try {
-						newWaveSurfer.destroy();
-					} catch {}
+					newWaveSurfer.destroy();
 					return;
 				}
 
@@ -102,7 +96,19 @@ export function AudioWaveform({
 					const peaks = extractPeaks({ buffer: audioBuffer });
 					newWaveSurfer.load("", peaks, audioBuffer.duration);
 				} else if (audioUrl) {
-					await newWaveSurfer.load(audioUrl);
+					if (audioUrl.trim().length === 0) {
+						throw new Error("Empty audio URL");
+					}
+
+					try {
+						await newWaveSurfer.load(audioUrl);
+					} catch (loadErr) {
+						// Only log if still mounted
+						if (mounted) {
+							console.warn(`WaveSurfer load failed for ${audioUrl}:`, loadErr);
+							throw loadErr;
+						}
+					}
 				}
 			} catch (err) {
 				if (mounted) {
@@ -113,35 +119,13 @@ export function AudioWaveform({
 			}
 		};
 
-		if (ws) {
-			const wsToDestroy = ws;
-			wavesurfer.current = null;
-
-			requestAnimationFrame(() => {
-				try {
-					wsToDestroy.destroy();
-				} catch {}
-				if (mounted) {
-					initWaveSurfer();
-				}
-			});
-		} else {
-			initWaveSurfer();
-		}
+		initWaveSurfer();
 
 		return () => {
 			mounted = false;
-
-			const wsToDestroy = wavesurfer.current;
-
-			wavesurfer.current = null;
-
-			if (wsToDestroy) {
-				requestAnimationFrame(() => {
-					try {
-						wsToDestroy.destroy();
-					} catch {}
-				});
+			if (wavesurfer.current) {
+				wavesurfer.current.destroy();
+				wavesurfer.current = null;
 			}
 		};
 	}, [audioUrl, audioBuffer, height]);

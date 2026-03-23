@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
@@ -11,7 +10,6 @@ import {
 	Copy01Icon,
 	Download01Icon,
 	GithubIcon,
-	LinkSquare02Icon,
 	Menu02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -28,25 +26,6 @@ export function Header() {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const closeMenu = () => setIsMenuOpen(false);
 
-	const links = [
-		{
-			label: "Roadmap",
-			href: "/roadmap",
-		},
-		{
-			label: "Contributors",
-			href: "/contributors",
-		},
-		{
-			label: "Sponsors",
-			href: "/sponsors",
-		},
-		{
-			label: "Blog",
-			href: "/blog",
-		},
-	];
-
 	return (
 		<header className="bg-background shadow-background/85 sticky top-0 z-10 shadow-[0_30px_35px_15px_rgba(0,0,0,1)]">
 			<div className="relative flex w-full items-center justify-between px-6 pt-4">
@@ -56,7 +35,7 @@ export function Header() {
 							<Link href="/" className="flex items-center gap-3">
 								<Image
 									src={DEFAULT_LOGO_URL}
-									alt="OpenCut Logo"
+									alt="Kurvo Logo"
 									className="invert dark:invert-0"
 									width={32}
 									height={32}
@@ -78,31 +57,15 @@ export function Header() {
 								onClick={() => {
 									const a = document.createElement("a");
 									a.href = DEFAULT_LOGO_URL;
-									a.download = "opencut-logo.svg";
+									a.download = "kurvo-logo.svg";
 									a.click();
 								}}
 							>
 								<HugeiconsIcon icon={Download01Icon} />
 								Download SVG
 							</ContextMenuItem>
-							<Link href="/brand">
-								<ContextMenuItem>
-									<HugeiconsIcon icon={LinkSquare02Icon} />
-									Brand assets
-								</ContextMenuItem>
-							</Link>
 						</ContextMenuContent>
 					</ContextMenu>
-
-					<nav className="hidden items-center gap-4 md:flex">
-						{links.map((link) => (
-							<Link key={link.href} href={link.href}>
-								<Button variant="text" className="p-0 text-sm">
-									{link.label}
-								</Button>
-							</Link>
-						))}
-					</nav>
 				</div>
 
 				<div className="relative z-10">
@@ -120,12 +83,12 @@ export function Header() {
 						<Link href={SOCIAL_LINKS.github}>
 							<Button className="bg-background text-sm" variant="outline">
 								<HugeiconsIcon icon={GithubIcon} className="size-4" />
-								40k+
+								Open Source
 							</Button>
 						</Link>
 						<Link href="/projects">
 							<Button className="text-sm">
-								Projects
+								Dashboard
 								<ArrowRight className="size-4" />
 							</Button>
 						</Link>
@@ -156,30 +119,13 @@ export function Header() {
 								}
 							}}
 						/>
-						<nav className="flex flex-col gap-3 px-6 pt-[5rem]">
-							{links.map((link, index) => (
-								<motion.div
-									key={link.href}
-									initial={{ scale: 0.98, opacity: 0 }}
-									animate={{
-										scale: isMenuOpen ? 1 : 0.98,
-										opacity: isMenuOpen ? 1 : 0,
-									}}
-									transition={{
-										duration: 0.4,
-										delay: isMenuOpen ? index * 0.1 : 0,
-										ease: [0.25, 0.46, 0.45, 0.94],
-									}}
-								>
-									<Link
-										href={link.href}
-										className="text-2xl font-semibold"
-										onClick={() => setIsMenuOpen(false)}
-									>
-										{link.label}
-									</Link>
-								</motion.div>
-							))}
+						<nav className="flex flex-col gap-6 px-6 pt-[5rem]">
+							<Link href="/projects" onClick={closeMenu} className="text-4xl font-black tracking-tighter hover:text-purple-400 transition-colors">
+								DASHBOARD
+							</Link>
+							<Link href={SOCIAL_LINKS.github} onClick={closeMenu} className="text-4xl font-black tracking-tighter hover:text-purple-400 transition-colors">
+								GITHUB
+							</Link>
 						</nav>
 						<ThemeToggle
 							className="absolute right-8 bottom-8 size-10"

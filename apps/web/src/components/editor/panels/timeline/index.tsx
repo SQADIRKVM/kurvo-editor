@@ -1,5 +1,7 @@
 "use client";
 
+import { cn } from "@/utils/ui";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
 	Delete02Icon,
@@ -50,6 +52,7 @@ import { TimelineBookmarksRow } from "./bookmarks";
 import { useBookmarkDrag } from "@/hooks/timeline/use-bookmark-drag";
 import { useEdgeAutoScroll } from "@/hooks/timeline/use-edge-auto-scroll";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { useTimelineDragStore } from "@/stores/timeline-drag-store";
 import { useEditor } from "@/hooks/use-editor";
 import { useTimelinePlayhead } from "@/hooks/timeline/use-timeline-playhead";
 import { DragLine } from "./drag-line";
@@ -113,9 +116,10 @@ export function Timeline() {
 			rulerScrollRef: tracksScrollRef,
 		});
 
+	const isDragging = useTimelineDragStore((s) => s.dragState.isDragging);
+	const draggedElementId = useTimelineDragStore((s) => s.dragState.elementId);
+
 	const {
-		dragState,
-		dragDropTarget,
 		handleElementMouseDown,
 		handleElementClick,
 		lastMouseXRef,
@@ -195,7 +199,7 @@ export function Timeline() {
 	const showSnapIndicator =
 		snappingEnabled &&
 		currentSnapPoint !== null &&
-		(dragState.isDragging || bookmarkDragState.isDragging || isResizing);
+		(isDragging || bookmarkDragState.isDragging || isResizing);
 
 	const {
 		handleTracksMouseDown,
@@ -224,9 +228,9 @@ export function Timeline() {
 
 	return (
 		<section
-			className={
-				"panel bg-background relative flex h-full flex-col overflow-hidden rounded-sm border"
-			}
+			className={cn(
+				"panel bg-transparent relative flex h-full flex-col overflow-hidden text-foreground",
+			)}
 			{...dragProps}
 			aria-label="Timeline"
 		>
@@ -250,17 +254,17 @@ export function Timeline() {
 					isVisible={showSnapIndicator}
 				/>
 				<div className="flex flex-1 overflow-hidden">
-					<div className="bg-background flex w-28 shrink-0 flex-col border-r">
-						<div className="bg-background flex h-4 items-center justify-between px-3">
+					<div className="bg-transparent/5 flex w-28 shrink-0 flex-col border-r border-white/5">
+						<div className="bg-transparent flex h-4 items-center justify-between px-3">
 							<span className="opacity-0">.</span>
 						</div>
-						<div className="bg-background flex h-4 items-center justify-between px-3">
+						<div className="bg-black/20 flex h-4 items-center justify-between px-3">
 							<span className="opacity-0">.</span>
 						</div>
 						{tracks.length > 0 && (
 							<div
 								ref={trackLabelsRef}
-								className="bg-background flex-1 overflow-y-auto"
+								className="bg-transparent flex-1 overflow-y-auto"
 								style={{ paddingTop: TIMELINE_CONSTANTS.PADDING_TOP_PX }}
 							>
 								<ScrollArea className="size-full" ref={trackLabelsScrollRef}>
@@ -333,10 +337,9 @@ export function Timeline() {
 							headerHeight={timelineHeaderHeight}
 						/>
 						<DragLine
-							dropTarget={dragDropTarget}
 							tracks={timeline.getTracks()}
-							isVisible={dragState.isDragging}
 							headerHeight={timelineHeaderHeight}
+							useDragStore={true}
 						/>
 						<ScrollArea
 							className="size-full overflow-y-hidden"
@@ -375,7 +378,7 @@ export function Timeline() {
 							>
 								<div
 									ref={timelineHeaderRef}
-									className="bg-background sticky top-0 flex flex-col"
+									className="bg-black/20 sticky top-0 flex flex-col border-b border-white/5"
 								>
 									<TimelineRuler
 										zoomLevel={zoomLevel}
@@ -428,10 +431,10 @@ export function Timeline() {
 											.map((track, index) => ({ track, index }))
 											.sort((a, b) => {
 											const aHasDragged = a.track.elements.some(
-												(element) => element.id === dragState.elementId,
+												(element) => element.id === draggedElementId,
 											);
 											const bHasDragged = b.track.elements.some(
-												(element) => element.id === dragState.elementId,
+												(element) => element.id === draggedElementId,
 											);
 												if (aHasDragged) return 1;
 												if (bHasDragged) return -1;
@@ -455,7 +458,6 @@ export function Timeline() {
 														<TimelineTrackContent
 															track={track}
 															zoomLevel={zoomLevel}
-															dragState={dragState}
 															rulerScrollRef={tracksScrollRef}
 															tracksScrollRef={tracksScrollRef}
 															lastMouseXRef={lastMouseXRef}

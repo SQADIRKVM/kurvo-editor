@@ -48,10 +48,11 @@ export class StickerNode extends VisualNode<StickerNodeParams> {
 		this.cachedSource = loadStickerSource(params.stickerId);
 	}
 
-	async render({ renderer, time }: { renderer: CanvasRenderer; time: number }) {
-		await super.render({ renderer, time });
+	async render({ renderer, time, ignoreHidden }: { renderer: CanvasRenderer; time: number; ignoreHidden?: boolean }) {
+		if (!ignoreHidden && !this.isShowingAt(time)) return;
+		await super.render({ renderer, time, ignoreHidden });
 
-		if (!this.isInRange({ time })) {
+		if (!ignoreHidden && !this.isInRange({ time })) {
 			return;
 		}
 

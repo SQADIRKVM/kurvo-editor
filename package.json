@@ -1,16 +1,16 @@
 {
-  "name": "opencut",
+  "name": "kurvo",
   "packageManager": "bun@1.2.18",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "turbo run dev --filter=@opencut/web",
-    "build:web": "turbo run build --filter=@opencut/web",
-    "dev:tools": "turbo run dev --filter=@opencut/tools",
-    "build:tools": "turbo run build --filter=@opencut/tools",
-    "start:tools": "turbo run start --filter=@opencut/tools",
+    "dev:web": "turbo run dev --filter=@kurvo/web",
+    "build:web": "turbo run build --filter=@kurvo/web",
+    "dev:tools": "turbo run dev --filter=@kurvo/tools",
+    "build:tools": "turbo run build --filter=@kurvo/tools",
+    "start:tools": "turbo run start --filter=@kurvo/tools",
     "lint:web": "biome lint apps/web/src --max-diagnostics=1000",
     "lint:web:fix": "biome lint apps/web/src --write --max-diagnostics=1000",
     "format:web": "biome format apps/web/src/services/renderer --write --max-diagnostics=1000",

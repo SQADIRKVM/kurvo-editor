@@ -1,19 +1,28 @@
 import { getDropLineY } from "@/lib/timeline/drop-utils";
 import type { TimelineTrack, DropTarget } from "@/types/timeline";
+import { useTimelineDragStore } from "@/stores/timeline-drag-store";
 
 interface DragLineProps {
-	dropTarget: DropTarget | null;
+	dropTarget?: DropTarget | null;
 	tracks: TimelineTrack[];
-	isVisible: boolean;
+	isVisible?: boolean;
 	headerHeight?: number;
+	useDragStore?: boolean;
 }
 
 export function DragLine({
-	dropTarget,
+	dropTarget: explicitDropTarget,
 	tracks,
-	isVisible,
+	isVisible: explicitIsVisible,
 	headerHeight = 0,
+	useDragStore = false,
 }: DragLineProps) {
+	const storeIsVisible = useTimelineDragStore((s) => s.dragState.isDragging);
+	const storeDropTarget = useTimelineDragStore((s) => s.dragDropTarget);
+
+	const isVisible = useDragStore ? storeIsVisible : explicitIsVisible;
+	const dropTarget = useDragStore ? storeDropTarget : explicitDropTarget;
+
 	if (!isVisible || !dropTarget) return null;
 
 	const y = getDropLineY({ dropTarget, tracks });

@@ -3,7 +3,7 @@ import { createOffscreenCanvas } from "../canvas-utils";
 import { BaseNode } from "./base-node";
 import type { Effect } from "@/types/effects";
 import type { BlendMode } from "@/types/rendering";
-import type { Transform } from "@/types/timeline";
+import type { Transform, CanvasFormat, ChromaKeyConfig } from "@/types/timeline";
 import type { ElementAnimations } from "@/types/animation";
 import {
 	getElementLocalTime,
@@ -25,6 +25,8 @@ export interface VisualNodeParams {
 	opacity: number;
 	blendMode?: BlendMode;
 	effects?: Effect[];
+	canvasFormat?: CanvasFormat;
+	chromaKey?: ChromaKeyConfig;
 }
 
 export abstract class VisualNode<
@@ -92,6 +94,26 @@ export abstract class VisualNode<
 		) as GlobalCompositeOperation;
 		renderer.context.globalAlpha = opacity;
 
+		if (this.params.canvasFormat) {
+			renderer.context.save();
+			if (this.params.canvasFormat.type === "color" && this.params.canvasFormat.color) {
+				renderer.context.fillStyle = this.params.canvasFormat.color;
+				renderer.context.fillRect(0, 0, renderer.width, renderer.height);
+			} else if (this.params.canvasFormat.type === "blur" && this.params.canvasFormat.blurLevel) {
+				const fillScale = Math.max(
+					renderer.width / sourceWidth,
+					renderer.height / sourceHeight,
+				);
+				const fillWidth = sourceWidth * fillScale;
+				const fillHeight = sourceHeight * fillScale;
+				const fillX = renderer.width / 2 - fillWidth / 2;
+				const fillY = renderer.height / 2 - fillHeight / 2;
+				renderer.context.filter = `blur(${this.params.canvasFormat.blurLevel}px)`;
+				renderer.context.drawImage(source, fillX, fillY, fillWidth, fillHeight);
+			}
+			renderer.context.restore();
+		}
+
 		if (transform.rotate !== 0) {
 			const centerX = x + scaledWidth / 2;
 			const centerY = y + scaledHeight / 2;
@@ -104,7 +126,15 @@ export abstract class VisualNode<
 			this.params.effects?.filter((effect) => effect.enabled) ?? [];
 
 		if (enabledEffects.length === 0) {
-			renderer.context.drawImage(source, x, y, scaledWidth, scaledHeight);
+			// Draw source (with optional chroma key masking)
+			if (this.params.chromaKey) {
+				renderer.context.drawImage(
+					applyChromaKey({ source, width: Math.round(scaledWidth), height: Math.round(scaledHeight), chromaKey: this.params.chromaKey }),
+					x, y, scaledWidth, scaledHeight,
+				);
+			} else {
+				renderer.context.drawImage(source, x, y, scaledWidth, scaledHeight);
+			}
 			renderer.context.restore();
 			return;
 		}
@@ -151,7 +181,9 @@ export abstract class VisualNode<
 		}
 
 		renderer.context.drawImage(
-			currentResult,
+			this.params.chromaKey
+				? applyChromaKey({ source: currentResult, width: Math.round(scaledWidth), height: Math.round(scaledHeight), chromaKey: this.params.chromaKey })
+				: currentResult,
 			x,
 			y,
 			scaledWidth,
@@ -159,4 +191,65 @@ export abstract class VisualNode<
 		);
 		renderer.context.restore();
 	}
+}
+
+// ─── Chroma Key Helper ────────────────────────────────────────────────────────
+
+function hexToRgb(hex: string): [number, number, number] {
+	const clean = hex.replace("#", "");
+	const r = parseInt(clean.substring(0, 2), 16);
+	const g = parseInt(clean.substring(2, 4), 16);
+	const b = parseInt(clean.substring(4, 6), 16);
+	return [r, g, b];
+}
+
+function applyChromaKey({
+	source,
+	width,
+	height,
+	chromaKey,
+}: {
+	source: CanvasImageSource;
+	width: number;
+	height: number;
+	chromaKey: ChromaKeyConfig;
+}): HTMLCanvasElement {
+	const offscreen = document.createElement("canvas");
+	offscreen.width = width;
+	offscreen.height = height;
+	const ctx = offscreen.getContext("2d")!;
+	ctx.drawImage(source, 0, 0, width, height);
+
+	const imageData = ctx.getImageData(0, 0, width, height);
+	const data = imageData.data;
+
+	const [kr, kg, kb] = hexToRgb(chromaKey.color);
+	const simThreshold = chromaKey.similarity / 100; // 0..1
+	const smoothRange = chromaKey.smoothness / 100 * 0.2; // soft feather amount
+
+	for (let i = 0; i < data.length; i += 4) {
+		const r = data[i]!;
+		const g = data[i + 1]!;
+		const b = data[i + 2]!;
+
+		// Normalised Euclidean distance in RGB space
+		const dist = Math.sqrt(
+			((r - kr) / 255) ** 2 +
+			((g - kg) / 255) ** 2 +
+			((b - kb) / 255) ** 2,
+		) / Math.sqrt(3); // Normalize to 0..1 range
+
+		if (dist < simThreshold) {
+			// Fully transparent or feathered
+			if (smoothRange > 0 && dist > simThreshold - smoothRange) {
+				const t = (dist - (simThreshold - smoothRange)) / smoothRange;
+				data[i + 3] = Math.round(255 * t);
+			} else {
+				data[i + 3] = 0;
+			}
+		}
+	}
+
+	ctx.putImageData(imageData, 0, 0);
+	return offscreen;
 }

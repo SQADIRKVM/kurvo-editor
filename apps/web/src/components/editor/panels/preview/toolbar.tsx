@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor } from "@/hooks/use-editor";
+import { useCurrentTime } from "@/hooks/use-current-time";
 import { formatTimeCode } from "@/lib/time";
 import { invokeAction } from "@/lib/actions";
 import { EditableTimecode } from "@/components/editable-timecode";
@@ -11,7 +12,7 @@ import {
 	PlayIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { OcSocialIcon } from "@opencut/ui/icons";
+import { OcSocialIcon } from "@kurvo/ui/icons";
 import { Separator } from "@/components/ui/separator";
 
 export function PreviewToolbar({
@@ -23,7 +24,7 @@ export function PreviewToolbar({
 }) {
 	const editor = useEditor();
 	const isPlaying = editor.playback.getIsPlaying();
-	const currentTime = editor.playback.getCurrentTime();
+	const currentTime = useCurrentTime();
 	const totalDuration = editor.timeline.getTotalDuration();
 	const fps = editor.project.getActive().settings.fps;
 

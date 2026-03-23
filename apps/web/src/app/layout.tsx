@@ -3,14 +3,16 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster } from "../components/ui/sonner";
 import { TooltipProvider } from "../components/ui/tooltip";
-import { baseMetaData } from "./metadata";
 import { BotIdClient } from "botid/client";
-import { webEnv } from "@opencut/env/web";
-import { Inter } from "next/font/google";
+import { webEnv } from "@kurvo/env/web";
+import { Outfit } from "next/font/google";
 
-const siteFont = Inter({ subsets: ["latin"] });
+const siteFont = Outfit({ subsets: ["latin"] });
 
-export const metadata = baseMetaData;
+export const metadata = {
+	title: "Kurvo | Extraordinary Video Editing",
+	description: "The unique, AI-powered video editor for extraordinary creators.",
+};
 
 const protectedRoutes = [
 	{
@@ -36,10 +38,11 @@ export default function RootLayout({
 					/>
 				)}
 			</head>
-			<body className={`${siteFont.className} font-sans antialiased`}>
+			<body className={`${siteFont.className} font-sans antialiased`} suppressHydrationWarning>
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="system"
+					defaultTheme="dark"
+					enableSystem={false}
 					disableTransitionOnChange={true}
 				>
 					<TooltipProvider>

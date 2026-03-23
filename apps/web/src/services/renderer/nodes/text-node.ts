@@ -97,8 +97,9 @@ export class TextNode extends BaseNode<TextNodeParams> {
 		);
 	}
 
-	async render({ renderer, time }: { renderer: CanvasRenderer; time: number }) {
-		if (!this.isInRange({ time })) {
+	async render({ renderer, time, ignoreHidden }: { renderer: CanvasRenderer; time: number; ignoreHidden?: boolean }) {
+		if (!ignoreHidden && !this.isShowingAt(time)) return;
+		if (!ignoreHidden && !this.isInRange({ time })) {
 			return;
 		}
 
@@ -209,6 +210,25 @@ export class TextNode extends BaseNode<TextNodeParams> {
 				(ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${letterSpacing}px`;
 			}
 
+            if (this.params.shadow && this.params.shadow.enabled) {
+                ctx.shadowColor = resolveColorAtTime({ 
+                    baseColor: this.params.shadow.color, 
+                    animations: this.params.animations, 
+                    propertyPath: "shadow.color", 
+                    localTime 
+                });
+                ctx.shadowBlur = this.params.shadow.blur;
+                const distance = this.params.shadow.distance;
+                const angleRad = (this.params.shadow.angle * Math.PI) / 180;
+                ctx.shadowOffsetX = distance * Math.cos(angleRad);
+                ctx.shadowOffsetY = distance * Math.sin(angleRad);
+            } else {
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            }
+
 			if (
 				this.params.background.enabled &&
 				this.params.background.color &&
@@ -234,6 +254,18 @@ export class TextNode extends BaseNode<TextNodeParams> {
 
 			for (let i = 0; i < lineCount; i++) {
 				const lineY = i * lineHeightPx - block.visualCenterOffset;
+				
+                if (this.params.stroke && this.params.stroke.enabled) {
+                    ctx.strokeStyle = resolveColorAtTime({
+                        baseColor: this.params.stroke.color,
+                        animations: this.params.animations,
+                        propertyPath: "stroke.color",
+                        localTime
+                    });
+                    ctx.lineWidth = this.params.stroke.thickness;
+                    ctx.strokeText(lines[i], 0, lineY);
+                }
+
 				ctx.fillText(lines[i], 0, lineY);
 				drawTextDecoration({
 					ctx,

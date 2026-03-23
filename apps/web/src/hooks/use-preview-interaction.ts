@@ -14,6 +14,7 @@ import {
 	snapPosition,
 	type SnapLine,
 } from "@/lib/preview/preview-snap";
+import { DEFAULT_TRANSFORM } from "@/constants/timeline-constants";
 
 const MIN_DRAG_DISTANCE = 0.5;
 
@@ -198,7 +199,7 @@ export function usePreviewInteraction({
 				elements: draggableElements.map(({ track, element }) => ({
 					trackId: track.id,
 					elementId: element.id,
-					initialTransform: (element as { transform: Transform }).transform,
+					initialTransform: (element as { transform?: Transform }).transform ?? DEFAULT_TRANSFORM,
 				})),
 			};
 
@@ -231,9 +232,10 @@ export function usePreviewInteraction({
 			}
 
 			const firstElement = dragStateRef.current.elements[0];
+			const initialPos = firstElement.initialTransform.position ?? DEFAULT_TRANSFORM.position;
 			const proposedPosition = {
-				x: firstElement.initialTransform.position.x + deltaX,
-				y: firstElement.initialTransform.position.y + deltaY,
+				x: initialPos.x + deltaX,
+				y: initialPos.y + deltaY,
 			};
 
 			const shouldSnap = !isShiftHeldRef.current;
@@ -256,9 +258,9 @@ export function usePreviewInteraction({
 			setSnapLines(activeLines);
 
 			const deltaSnappedX =
-				snappedPosition.x - firstElement.initialTransform.position.x;
+				snappedPosition.x - initialPos.x;
 			const deltaSnappedY =
-				snappedPosition.y - firstElement.initialTransform.position.y;
+				snappedPosition.y - initialPos.y;
 
 			const updates = dragStateRef.current.elements.map(
 				({ trackId, elementId, initialTransform }) => ({
@@ -268,8 +270,8 @@ export function usePreviewInteraction({
 						transform: {
 							...initialTransform,
 							position: {
-								x: initialTransform.position.x + deltaSnappedX,
-								y: initialTransform.position.y + deltaSnappedY,
+								x: (initialTransform.position?.x ?? DEFAULT_TRANSFORM.position.x) + deltaSnappedX,
+								y: (initialTransform.position?.y ?? DEFAULT_TRANSFORM.position.y) + deltaSnappedY,
 							},
 						},
 					},

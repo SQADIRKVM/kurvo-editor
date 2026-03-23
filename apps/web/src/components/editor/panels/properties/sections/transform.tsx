@@ -24,6 +24,7 @@ import { TIME_EPSILON_SECONDS } from "@/constants/animation-constants";
 import { getElementLocalTime, resolveTransformAtTime } from "@/lib/animation";
 import { KeyframeToggle } from "../keyframe-toggle";
 import { useKeyframedNumberProperty } from "../hooks/use-keyframed-number-property";
+import { CapCutSlider } from "@/components/ui/capcut-slider";
 
 export function parseNumericInput({ input }: { input: string }): number | null {
 	const parsed = parseFloat(input);
@@ -89,15 +90,19 @@ export function TransformSection({
 		displayValue: Math.round(resolvedTransform.position.x).toString(),
 		parse: (input) => parseNumericInput({ input }),
 		valueAtPlayhead: resolvedTransform.position.x,
-		buildBaseUpdates: ({ value }) => ({
-			transform: {
-				...element.transform,
-				position: {
-					...element.transform.position,
-					x: value,
+		buildBaseUpdates: ({ value }) => {
+			const currentTransform = element.transform ?? DEFAULT_TRANSFORM;
+			const currentPosition = currentTransform.position ?? DEFAULT_TRANSFORM.position;
+			return {
+				transform: {
+					...currentTransform,
+					position: {
+						...currentPosition,
+						x: value,
+					},
 				},
-			},
-		}),
+			};
+		},
 	});
 
 	const positionY = useKeyframedNumberProperty({
@@ -110,15 +115,19 @@ export function TransformSection({
 		displayValue: Math.round(resolvedTransform.position.y).toString(),
 		parse: (input) => parseNumericInput({ input }),
 		valueAtPlayhead: resolvedTransform.position.y,
-		buildBaseUpdates: ({ value }) => ({
-			transform: {
-				...element.transform,
-				position: {
-					...element.transform.position,
-					y: value,
+		buildBaseUpdates: ({ value }) => {
+			const currentTransform = element.transform ?? DEFAULT_TRANSFORM;
+			const currentPosition = currentTransform.position ?? DEFAULT_TRANSFORM.position;
+			return {
+				transform: {
+					...currentTransform,
+					position: {
+						...currentPosition,
+						y: value,
+					},
 				},
-			},
-		}),
+			};
+		},
 	});
 
 	const scale = useKeyframedNumberProperty({
@@ -137,7 +146,7 @@ export function TransformSection({
 		valueAtPlayhead: resolvedTransform.scale,
 		buildBaseUpdates: ({ value }) => ({
 			transform: {
-				...element.transform,
+				...(element.transform ?? DEFAULT_TRANSFORM),
 				scale: value,
 			},
 		}),
@@ -156,7 +165,7 @@ export function TransformSection({
 			hasAnimatedKeyframes: scale.hasAnimatedKeyframes,
 			isPlayheadWithinElementRange,
 			resolvedValue: resolvedTransform.scale,
-			staticValue: element.transform.scale,
+			staticValue: element.transform?.scale ?? DEFAULT_TRANSFORM.scale,
 			defaultValue: DEFAULT_TRANSFORM.scale,
 		}),
 	};
@@ -177,7 +186,7 @@ export function TransformSection({
 		valueAtPlayhead: resolvedTransform.rotate,
 		buildBaseUpdates: ({ value }) => ({
 			transform: {
-				...element.transform,
+				...(element.transform ?? DEFAULT_TRANSFORM),
 				rotate: value,
 			},
 		}),
@@ -250,41 +259,26 @@ export function TransformSection({
 			<SectionHeader><SectionTitle>Transform</SectionTitle></SectionHeader>
 			<SectionContent>
 				<SectionFields>
-					<SectionField
-						label="Scale"
-						beforeLabel={
-							<KeyframeToggle
-								isActive={scale.isKeyframedAtTime}
-								isDisabled={!isPlayheadWithinElementRange}
-								title="Toggle scale keyframe"
-								onToggle={scale.toggleKeyframe}
+					<div className="flex flex-col gap-1 w-full pl-2">
+						<div className="flex items-center w-full relative group pr-2">
+							<CapCutSlider
+								label="Scale"
+								value={Math.round(resolvedTransform.scale * 100)}
+								min={1}
+								max={500}
+								onChange={(val) => {
+									const commitVal = Math.max(val, 1) / 100;
+									scale.commitValue({ value: commitVal });
+								}}
+								onFocus={scale.onFocus}
+								onBlur={scale.onBlur}
+								isKeyframable
+								isKeyframeActive={scale.isKeyframedAtTime}
+								isPlayheadWithinRange={isPlayheadWithinElementRange}
+								onToggleKeyframe={scale.toggleKeyframe}
 							/>
-						}
-					>
-						<div className="flex items-center gap-2">
-							{isScaleLocked ? (
-								<>
-									<NumberField icon="W" {...scaleFieldProps} />
-									<NumberField icon="H" {...scaleFieldProps} />
-								</>
-							) : (
-								<NumberField
-									icon={<HugeiconsIcon icon={ArrowExpandIcon} />}
-									{...scaleFieldProps}
-									className="flex-1"
-								/>
-							)}
-							<Button
-								type="button"
-								variant={isScaleLocked ? "secondary" : "ghost"}
-								size="icon"
-								aria-pressed={isScaleLocked}
-								onClick={() => setIsScaleLocked((isLocked) => !isLocked)}
-							>
-								<HugeiconsIcon icon={Link05Icon} />
-							</Button>
 						</div>
-					</SectionField>
+					</div>
 					<SectionField
 						label="Position"
 						beforeLabel={
@@ -313,7 +307,7 @@ export function TransformSection({
 									hasAnimatedKeyframes: positionX.hasAnimatedKeyframes,
 									isPlayheadWithinElementRange,
 									resolvedValue: resolvedTransform.position.x,
-									staticValue: element.transform.position.x,
+									staticValue: element.transform?.position?.x ?? DEFAULT_TRANSFORM.position.x,
 									defaultValue: DEFAULT_TRANSFORM.position.x,
 								})}
 							/>
@@ -333,48 +327,30 @@ export function TransformSection({
 									hasAnimatedKeyframes: positionY.hasAnimatedKeyframes,
 									isPlayheadWithinElementRange,
 									resolvedValue: resolvedTransform.position.y,
-									staticValue: element.transform.position.y,
+									staticValue: element.transform?.position?.y ?? DEFAULT_TRANSFORM.position.y,
 									defaultValue: DEFAULT_TRANSFORM.position.y,
 								})}
 							/>
 						</div>
 					</SectionField>
 
-					<SectionField
-						label="Rotation"
-						beforeLabel={
-							<KeyframeToggle
-								isActive={rotation.isKeyframedAtTime}
-								isDisabled={!isPlayheadWithinElementRange}
-								title="Toggle rotation keyframe"
-								onToggle={rotation.toggleKeyframe}
-							/>
-						}
-					>
-						<div className="flex items-center gap-2">
-							<NumberField
-								icon={<HugeiconsIcon icon={RotateClockwiseIcon} />}
-								className="flex-none"
-								value={rotation.displayValue}
+					<div className="flex flex-col gap-1 w-full pl-2 pb-2">
+						<div className="flex items-center w-full relative group pr-2">
+							<CapCutSlider
+								label="Rotate"
+								value={Math.round(resolvedTransform.rotate)}
+								min={-360}
+								max={360}
+								onChange={(val) => rotation.commitValue({ value: val })}
 								onFocus={rotation.onFocus}
-								onChange={rotation.onChange}
 								onBlur={rotation.onBlur}
-								dragSensitivity="slow"
-								onScrub={rotation.scrubTo}
-								onScrubEnd={rotation.commitScrub}
-								onReset={() =>
-									rotation.commitValue({ value: DEFAULT_TRANSFORM.rotate })
-								}
-								isDefault={isPropertyAtDefault({
-									hasAnimatedKeyframes: rotation.hasAnimatedKeyframes,
-									isPlayheadWithinElementRange,
-									resolvedValue: resolvedTransform.rotate,
-									staticValue: element.transform.rotate,
-									defaultValue: DEFAULT_TRANSFORM.rotate,
-								})}
+								isKeyframable
+								isKeyframeActive={rotation.isKeyframedAtTime}
+								isPlayheadWithinRange={isPlayheadWithinElementRange}
+								onToggleKeyframe={rotation.toggleKeyframe}
 							/>
 						</div>
-					</SectionField>
+					</div>
 				</SectionFields>
 			</SectionContent>
 		</Section>

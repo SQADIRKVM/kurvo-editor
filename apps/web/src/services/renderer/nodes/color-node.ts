@@ -14,7 +14,16 @@ export class ColorNode extends BaseNode<ColorNodeParams> {
 		this.color = params.color;
 	}
 
-	async render({ renderer }: { renderer: CanvasRenderer }) {
+	async render({
+		renderer,
+		time,
+		ignoreHidden,
+	}: {
+		renderer: CanvasRenderer;
+		time: number;
+		ignoreHidden?: boolean;
+	}) {
+		if (!ignoreHidden && !this.isShowingAt(time)) return;
 		if (/gradient\(/i.test(this.color)) {
 			drawCssBackground({
 				ctx: renderer.context,

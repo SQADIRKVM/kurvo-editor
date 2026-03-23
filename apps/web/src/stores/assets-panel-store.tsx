@@ -67,7 +67,7 @@ export const tabs = {
 	},
 	filters: {
 		icon: createHugeiconsIcon({ icon: ColorsIcon }),
-		label: "Filters",
+		label: "Filters & LUTs",
 	},
 	adjustment: {
 		icon: createHugeiconsIcon({ icon: SlidersHorizontalIcon }),

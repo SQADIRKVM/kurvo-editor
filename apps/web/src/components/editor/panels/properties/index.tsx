@@ -11,7 +11,7 @@ import { useEditor } from "@/hooks/use-editor";
 import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
 import { usePropertiesStore } from "@/stores/properties-store";
 import { isVisualElement } from "@/lib/timeline";
-import type { TimelineElement, TimelineTrack } from "@/types/timeline";
+import type { TimelineElement, TimelineTrack, AudioElement } from "@/types/timeline";
 
 function ElementProperties({
 	track,
@@ -24,7 +24,7 @@ function ElementProperties({
 		return <TextProperties element={element} trackId={track.id} />;
 	}
 	if (element.type === "audio") {
-		return <AudioProperties />;
+		return <AudioProperties element={element as AudioElement} trackId={track.id} />;
 	}
 	if (
 		element.type === "video" ||
@@ -62,7 +62,7 @@ export function PropertiesPanel() {
 	});
 
 	return (
-		<div className="panel bg-background h-full rounded-sm border overflow-hidden">
+		<div className="panel bg-transparent flex h-full overflow-hidden text-foreground">
 			{isShowingClipEffects ? (
 				<ClipEffectsProperties
 					element={clipEffectsElement}

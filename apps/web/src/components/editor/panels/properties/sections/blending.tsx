@@ -5,7 +5,7 @@ import {
 	DEFAULT_BLEND_MODE,
 	DEFAULT_OPACITY,
 } from "@/constants/timeline-constants";
-import { OcCheckerboardIcon } from "@opencut/ui/icons";
+import { OcCheckerboardIcon } from "@kurvo/ui/icons";
 import { Fragment, useRef } from "react";
 import { Section, SectionContent, SectionField, SectionHeader, SectionTitle } from "../section";
 import {
@@ -118,7 +118,7 @@ export function BlendingSection({
 		duration: element.duration,
 	});
 	const resolvedOpacity = resolveOpacityAtTime({
-		baseOpacity: element.opacity,
+		baseOpacity: element.opacity ?? DEFAULT_OPACITY,
 		animations: element.animations,
 		localTime,
 	});
@@ -175,7 +175,7 @@ export function BlendingSection({
 							hasAnimatedKeyframes: opacity.hasAnimatedKeyframes,
 							isPlayheadWithinElementRange,
 							resolvedValue: resolvedOpacity,
-							staticValue: element.opacity,
+							staticValue: element.opacity ?? DEFAULT_OPACITY,
 							defaultValue: DEFAULT_OPACITY,
 						})}
 						dragSensitivity="slow"

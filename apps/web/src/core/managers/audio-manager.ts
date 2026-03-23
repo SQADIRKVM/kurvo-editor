@@ -242,73 +242,238 @@ export class AudioManager {
 		this.clipIterators.set(clip.id, iterator);
 		let consecutiveDroppedBufferCount = 0;
 
-		for await (const { buffer, timestamp } of iterator) {
-			if (!this.editor.playback.getIsPlaying()) return;
-			if (sessionId !== this.playbackSessionId) return;
+		try {
+			for await (const { buffer, timestamp } of iterator) {
+				if (!this.editor.playback.getIsPlaying()) return;
+				if (sessionId !== this.playbackSessionId) return;
 
-			const timelineTime = clip.startTime + (timestamp - clip.trimStart);
-			if (timelineTime >= clipEnd) break;
+				const timelineTime = clip.startTime + (timestamp - clip.trimStart);
+				if (timelineTime >= clipEnd) break;
 
-			const node = audioContext.createBufferSource();
-			node.buffer = buffer;
-			node.connect(this.masterGain ?? audioContext.destination);
+				const node = audioContext.createBufferSource();
+				node.buffer = buffer;
+				
+				// Voice Changer (Simple Pitch Shift)
+				if (clip.voiceChanger === "deep") {
+					node.detune.value = -600;
+				} else if (clip.voiceChanger === "high" || clip.voiceChanger === "chipmunk") {
+					node.detune.value = clip.voiceChanger === "chipmunk" ? 1200 : 600;
+				} else if (clip.voiceChanger === "robot") {
+					node.detune.value = -400; // Ring modulation prep or deep harsh
+				}
 
-			const startTimestamp =
-				this.playbackStartContextTime +
-				this.playbackLatencyCompensationSeconds +
-				(timelineTime - this.playbackStartTime);
+				// Per-clip gain node for volume and fades
+				const chunkGain = audioContext.createGain();
+				const baseVolume = clip.volume ?? 1;
+				
+				const relativeTimeInClip = timelineTime - clip.startTime;
+				const chunkDuration = buffer.duration;
+				
+				const startTimestamp =
+					this.playbackStartContextTime +
+					this.playbackLatencyCompensationSeconds +
+					(timelineTime - this.playbackStartTime);
 
-			if (startTimestamp >= audioContext.currentTime) {
-				node.start(startTimestamp);
-				consecutiveDroppedBufferCount = 0;
-			} else {
-				const offset = audioContext.currentTime - startTimestamp;
-				if (offset < buffer.duration) {
-					node.start(audioContext.currentTime, offset);
+				// Initialize gain
+				let targetVolume = baseVolume;
+
+				// Apply Auto Ducking
+				if (clip.autoDucking) {
+					const isOtherClipPlaying = this.clips.some(other => 
+						!other.muted && 
+						!other.autoDucking && 
+						other.id !== clip.id &&
+						timelineTime < (other.startTime + other.duration) &&
+						(timelineTime + chunkDuration) > other.startTime
+					);
+					
+					if (isOtherClipPlaying) {
+						targetVolume *= 0.2; // Duck to 20%
+					}
+				}
+
+				chunkGain.gain.setValueAtTime(targetVolume, startTimestamp);
+
+				// Apply Fade In
+				if (clip.fadeInDuration && relativeTimeInClip < clip.fadeInDuration) {
+					const fadeStart = Math.max(0, relativeTimeInClip);
+					const fadeEnd = Math.min(clip.fadeInDuration, relativeTimeInClip + chunkDuration);
+					
+					const startGain = (fadeStart / clip.fadeInDuration) * targetVolume;
+					const endGain = (fadeEnd / clip.fadeInDuration) * targetVolume;
+					
+					chunkGain.gain.setValueAtTime(startGain, startTimestamp);
+					chunkGain.gain.linearRampToValueAtTime(endGain, startTimestamp + chunkDuration);
+				}
+
+				// Apply Fade Out
+				const fadeOutStartOffset = clip.duration - (clip.fadeOutDuration ?? 0);
+				if (clip.fadeOutDuration && (relativeTimeInClip + chunkDuration) > fadeOutStartOffset) {
+					const fadeStart = Math.max(fadeOutStartOffset, relativeTimeInClip);
+					const fadeEnd = Math.min(clip.duration, relativeTimeInClip + chunkDuration);
+					
+					const startGain = ((clip.duration - fadeStart) / clip.fadeOutDuration) * targetVolume;
+					const endGain = ((clip.duration - fadeEnd) / clip.fadeOutDuration) * targetVolume;
+					
+					// If we already had a ramp from fade-in, we need to respect the timing
+					chunkGain.gain.setValueAtTime(startGain, startTimestamp + (fadeStart - relativeTimeInClip));
+					chunkGain.gain.linearRampToValueAtTime(endGain, startTimestamp + (fadeEnd - relativeTimeInClip));
+				}
+
+				node.connect(chunkGain);
+
+				// --- Audio Processing Chain ---
+				let lastNode: AudioNode = chunkGain;
+
+				// 0. Equalizer (BiquadFilter mapping)
+				if (clip.equalizer && clip.equalizer !== "none") {
+					const ctx = audioContext;
+					const eq = ctx.createBiquadFilter();
+					eq.type = "peaking";
+					eq.Q.value = 1.0;
+					
+					const eqBass = ctx.createBiquadFilter();
+					eqBass.type = "lowshelf";
+					eqBass.frequency.value = 250;
+
+					const eqTreble = ctx.createBiquadFilter();
+					eqTreble.type = "highshelf";
+					eqTreble.frequency.value = 4000;
+
+					switch (clip.equalizer) {
+						case "pop":
+							eq.frequency.value = 2000;
+							eq.gain.value = 3;
+							break;
+						case "rock":
+							eq.frequency.value = 1000; // Mid scoop
+							eq.gain.value = -3;
+							eqBass.gain.value = 4;
+							eqTreble.gain.value = 4;
+							break;
+						case "jazz":
+							eq.frequency.value = 400; // Warm mids
+							eq.gain.value = 2;
+							eqTreble.gain.value = 1;
+							break;
+						case "classical":
+							eqBass.gain.value = 2; 
+							eqTreble.gain.value = 2;
+							break;
+						case "electronic":
+							eqBass.gain.value = 5;
+							eqTreble.gain.value = 4;
+							break;
+						case "dance":
+							eqBass.gain.value = 6;
+							eq.frequency.value = 1000;
+							eq.gain.value = -2;
+							eqTreble.gain.value = 4;
+							break;
+					}
+
+					lastNode.connect(eqBass);
+					eqBass.connect(eq);
+					eq.connect(eqTreble);
+					lastNode = eqTreble;
+				}
+
+				// 1. Noise Reduction (Simple Bandpass)
+				if (clip.noiseReduction) {
+					const hp = audioContext.createBiquadFilter();
+					hp.type = "highpass";
+					hp.frequency.value = 200;
+					
+					const lp = audioContext.createBiquadFilter();
+					lp.type = "lowpass";
+					lp.frequency.value = 8000;
+
+					lastNode.connect(hp);
+					hp.connect(lp);
+					lastNode = lp;
+				}
+
+				// 2. Voice Enhancement (Compression + EQ)
+				if (clip.voiceEnchancement) {
+					const compressor = audioContext.createDynamicsCompressor();
+					compressor.threshold.value = -24;
+					compressor.knee.value = 30;
+					compressor.ratio.value = 12;
+					compressor.attack.value = 0.003;
+					compressor.release.value = 0.25;
+
+					const eq = audioContext.createBiquadFilter();
+					eq.type = "peaking";
+					eq.frequency.value = 3000;
+					eq.Q.value = 1;
+					eq.gain.value = 4; // 4dB boost for clarity
+
+					lastNode.connect(compressor);
+					compressor.connect(eq);
+					lastNode = eq;
+				}
+
+				lastNode.connect(this.masterGain ?? audioContext.destination);
+
+				if (startTimestamp >= audioContext.currentTime) {
+					node.start(startTimestamp);
 					consecutiveDroppedBufferCount = 0;
 				} else {
-					consecutiveDroppedBufferCount += 1;
-					if (consecutiveDroppedBufferCount >= 5) {
-						const nextCompensationSeconds = Math.max(
-							this.playbackLatencyCompensationSeconds,
-							Math.min(0.25, offset + 0.01),
-						);
-						if (
-							nextCompensationSeconds >
-							this.playbackLatencyCompensationSeconds + 0.001
-						) {
-							this.playbackLatencyCompensationSeconds =
-								nextCompensationSeconds;
+					const offset = audioContext.currentTime - startTimestamp;
+					if (offset < buffer.duration) {
+						node.start(audioContext.currentTime, offset);
+						consecutiveDroppedBufferCount = 0;
+					} else {
+						consecutiveDroppedBufferCount += 1;
+						if (consecutiveDroppedBufferCount >= 5) {
+							const nextCompensationSeconds = Math.max(
+								this.playbackLatencyCompensationSeconds,
+								Math.min(0.25, offset + 0.01),
+							);
+							if (
+								nextCompensationSeconds >
+								this.playbackLatencyCompensationSeconds + 0.001
+							) {
+								this.playbackLatencyCompensationSeconds =
+									nextCompensationSeconds;
+							}
+							const resyncStartTime = this.getPlaybackTime();
+							this.clipIterators.delete(clip.id);
+							void this.runClipIterator({
+								clip,
+								startTime: resyncStartTime,
+								sessionId,
+							});
+							return;
 						}
-						const resyncStartTime = this.getPlaybackTime();
-						this.clipIterators.delete(clip.id);
-						void this.runClipIterator({
-							clip,
-							startTime: resyncStartTime,
-							sessionId,
-						});
-						return;
+						continue;
 					}
-					continue;
+				}
+
+				this.queuedSources.add(node);
+				node.addEventListener("ended", () => {
+					node.disconnect();
+					this.queuedSources.delete(node);
+				});
+
+				const aheadTime = timelineTime - this.getPlaybackTime();
+				if (aheadTime >= 1) {
+					await this.waitUntilCaughtUp({ timelineTime, targetAhead: 1 });
+					if (sessionId !== this.playbackSessionId) return;
 				}
 			}
-
-			this.queuedSources.add(node);
-			node.addEventListener("ended", () => {
-				node.disconnect();
-				this.queuedSources.delete(node);
-			});
-
-			const aheadTime = timelineTime - this.getPlaybackTime();
-			if (aheadTime >= 1) {
-				await this.waitUntilCaughtUp({ timelineTime, targetAhead: 1 });
-				if (sessionId !== this.playbackSessionId) return;
+		} catch (error) {
+			if (error instanceof Error && error.message.toLowerCase().includes("dispose")) {
+				return;
 			}
+			console.error("Audio playback error:", error);
+		} finally {
+			if (sessionId === this.playbackSessionId) {
+				this.clipIterators.delete(clip.id);
+			}
+			// don't remove from activeClipIds - prevents scheduler from restarting this clip
+			// the set is cleared on stopPlayback anyway
 		}
-
-		this.clipIterators.delete(clip.id);
-		// don't remove from activeClipIds - prevents scheduler from restarting this clip
-		// the set is cleared on stopPlayback anyway
 	}
 
 	private waitUntilCaughtUp({

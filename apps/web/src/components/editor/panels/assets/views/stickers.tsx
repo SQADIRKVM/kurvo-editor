@@ -26,6 +26,7 @@ import {
 	Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import {
 	Select,
@@ -34,7 +35,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { OcSlidersVerticalIcon } from "@opencut/ui/icons";
+import { OcSlidersVerticalIcon } from "@kurvo/ui/icons";
 import type { StickerCategory } from "@/types/stickers";
 import { STICKER_CATEGORIES } from "@/constants/sticker-constants";
 import { parseStickerId } from "@/lib/stickers/sticker-id";
@@ -109,16 +110,11 @@ function StickerGrid({
 
 function EmptyView({ message }: { message: string }) {
 	return (
-		<div className="bg-background flex h-full flex-col items-center justify-center gap-3 p-4">
-			<HugeiconsIcon
-				icon={HappyIcon}
-				className="text-muted-foreground size-10"
-			/>
-			<div className="flex flex-col gap-2 text-center">
-				<p className="text-lg font-medium">No stickers found</p>
-				<p className="text-muted-foreground text-sm text-balance">{message}</p>
-			</div>
-		</div>
+		<EmptyState 
+			icon={<HugeiconsIcon icon={HappyIcon} className="size-10 text-muted-foreground/30" />}
+			title="No stickers found"
+			description={message}
+		/>
 	);
 }
 

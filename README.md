@@ -1,41 +1,29 @@
 <table width="100%">
   <tr>
     <td align="left" width="120">
-      <img src="apps/web/public/logos/opencut/1k/logo-white-black.png" alt="OpenCut Logo" width="100" />
+      <img src="apps/web/public/brand/kurvo-logo.png" alt="Kurvo Logo" width="100" />
     </td>
     <td align="right">
-      <h1>OpenCut</span></h1>
-      <h3 style="margin-top: -10px;">A free, open-source video editor for web, desktop, and mobile.</h3>
+      <h1>Kurvo</span></h1>
+      <h3 style="margin-top: -10px;">An extraordinary, AI-powered video editor for professional creators.</h3>
     </td>
   </tr>
 </table>
 
-## Sponsors
+## Why Kurvo?
 
-Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss) and [fal.ai](https://fal.ai?utm_source=github-opencut&utm_campaign=oss) for their support of open-source software.
-
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
-
-<a href="https://fal.ai">
-  <img alt="Powered by fal.ai" src="https://img.shields.io/badge/Powered%20by-fal.ai-000000?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCAxMEwxMy4wOSAxNS43NEwxMiAyMkwxMC45MSAxNS43NEw0IDEwTDEwLjkxIDguMjZMMTIgMloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=" />
-</a>
-
-## Why?
-
-- **Privacy**: Your videos stay on your device
-- **Free features**: Most basic CapCut features are now paywalled 
-- **Simple**: People want editors that are easy to use - CapCut proved that
+- **Privacy First**: Your creative assets stay on your device - always.
+- **AI Intelligence**: Autonomous tools for splitting, captioning, and enhancing content.
+- **Professional Standard**: A high-fidelity, open-source alternative designed for the modern web.
+- **Zero Friction**: No watermarks, no subscriptions, no forced logic.
 
 ## Features
 
-- Timeline-based editing
-- Multi-track support
-- Real-time preview
-- No watermarks or subscriptions
-- Analytics provided by [Databuddy](https://www.databuddy.cc?utm_source=opencut), 100% Anonymized & Non-invasive.
-- Blog powered by [Marble](https://marblecms.com?utm_source=opencut), Headless CMS.
+- **Cinematic Timeline**: Multi-track editing with pixel-perfect precision.
+- **AI Magic**: Real-time content awareness and automated editing shortcuts.
+- **Pro Performance**: Hardware-accelerated transitions and high-FPS preview.
+- **Total Freedom**: Transparent, open-source code for the creative community.
+- **Analytics**: Powered by [Databuddy](https://www.databuddy.cc), 100% Anonymized & Non-invasive.
 
 ## Project Structure
 
@@ -57,60 +45,41 @@ Thanks to [Vercel](https://vercel.com?utm_source=github-opencut&utm_campaign=oss
 
 ### Setup
 
-1. Fork and clone the repository
+1. Clone the repository
 
 2. Copy the environment file:
-
    ```bash
-   # Unix/Linux/Mac
    cp apps/web/.env.example apps/web/.env.local
-
-   # Windows PowerShell
-   Copy-Item apps/web/.env.example apps/web/.env.local
    ```
 
-3. Start the database and Redis:
-
+3. Start the infrastructure:
    ```bash
    docker compose up -d db redis serverless-redis-http
    ```
 
-4. Install dependencies and start the dev server:
-
+4. Install and Start:
    ```bash
    bun install
-   bun dev:web
+   bun dev
    ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
-The `.env.example` has sensible defaults that match the Docker Compose config — it should work out of the box.
-
-### Self-Hosting with Docker
-
-To run everything (including a production build of the app) in Docker:
-
-```bash
-docker compose up -d
-```
-
-The app will be available at [http://localhost:3100](http://localhost:3100).
-
 ## Contributing
 
-We welcome contributions! While we're actively developing and refactoring certain areas, there are plenty of opportunities to contribute effectively.
+We welcome contributions! We're actively developing the next generation of creative tools.
 
-**🎯 Focus areas:** Timeline functionality, project management, performance, bug fixes, and UI improvements outside the preview panel.
+**🎯 Focus areas:** Timeline performance, AI integrations, professional color grading, and advanced transition effects.
 
-**⚠️ Avoid for now:** Preview panel enhancements (fonts, stickers, effects) and export functionality - we're refactoring these with a new binary rendering approach.
+## Credits
 
-See our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instructions, development guidelines, and complete focus area guidance.
+**Kurvo is proudly built on top of the [OpenCut](https://github.com/opencut-app/opencut) project.**
 
-**Quick start for contributors:**
+We are deeply grateful to the original OpenCut authors and contributors for providing the foundational architecture that made Kurvo possible. This version includes extensive UI/UX modifications, performance optimizations, and new AI-driven features.
 
-- Fork the repo and clone locally
-- Follow the setup instructions in CONTRIBUTING.md
-- Create a feature branch and submit a PR
+Original sponsors included:
+- [Vercel](https://vercel.com)
+- [fal.ai](https://fal.ai)
 
 ## License
 
@@ -118,4 +87,4 @@ See our [Contributing Guide](.github/CONTRIBUTING.md) for detailed setup instruc
 
 ---
 
-![Star History Chart](https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date)
+![Kurvo Banner](apps/web/public/brand/kurvo-logo.png)

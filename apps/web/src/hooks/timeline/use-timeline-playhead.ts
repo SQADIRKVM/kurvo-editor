@@ -15,6 +15,7 @@ interface UseTimelinePlayheadProps {
 	rulerScrollRef: React.RefObject<HTMLDivElement | null>;
 	tracksScrollRef: React.RefObject<HTMLDivElement | null>;
 	playheadRef?: React.RefObject<HTMLDivElement | null>;
+	currentTime?: number;
 }
 
 export function useTimelinePlayhead({
@@ -23,28 +24,27 @@ export function useTimelinePlayhead({
 	rulerScrollRef,
 	tracksScrollRef,
 	playheadRef,
+	currentTime: externalCurrentTime,
 }: UseTimelinePlayheadProps) {
 	const editor = useEditor();
 	const activeProject = editor.project.getActive();
-	const currentTime = editor.playback.getCurrentTime();
 	const duration = editor.timeline.getTotalDuration();
 	const isPlaying = editor.playback.getIsPlaying();
 	const isScrubbing = editor.playback.getIsScrubbing();
 	const isShiftHeldRef = useShiftKey();
+
+	const currentTime = externalCurrentTime ?? editor.playback.getCurrentTime();
 
 	const seek = useCallback(
 		({ time }: { time: number }) => editor.playback.seek({ time }),
 		[editor.playback],
 	);
 
-	const [scrubTime, setScrubTime] = useState<number | null>(null);
-
 	const [isDraggingRuler, setIsDraggingRuler] = useState(false);
 	const [hasDraggedRuler, setHasDraggedRuler] = useState(false);
 	const lastMouseXRef = useRef<number>(0);
 
-	const playheadPosition =
-		isScrubbing && scrubTime !== null ? scrubTime : currentTime;
+	const playheadPosition = currentTime;
 
 	const handleScrub = useCallback(
 		({
@@ -102,7 +102,6 @@ export function useTimelinePlayhead({
 				return snapResult.snapPoint ? snapResult.snappedTime : frameTime;
 			})();
 
-			setScrubTime(time);
 			seek({ time });
 
 			lastMouseXRef.current = event.clientX;
@@ -175,17 +174,17 @@ export function useTimelinePlayhead({
 
 		const handleMouseUp = ({ event }: { event: MouseEvent }) => {
 			editor.playback.setScrubbing({ isScrubbing: false });
-			if (scrubTime !== null) {
-				seek({ time: scrubTime });
-				editor.project.setTimelineViewState({
-					viewState: {
-						zoomLevel,
-						scrollLeft: tracksScrollRef.current?.scrollLeft ?? 0,
-						playheadTime: scrubTime,
-					},
-				});
-			}
-			setScrubTime(null);
+			
+			// Fire a final seek to sync up anything waiting for interaction end
+			const finalTime = editor.playback.getCurrentTime();
+			seek({ time: finalTime });
+			editor.project.setTimelineViewState({
+				viewState: {
+					zoomLevel,
+					scrollLeft: tracksScrollRef.current?.scrollLeft ?? 0,
+					playheadTime: finalTime,
+				},
+			});
 
 			if (isDraggingRuler) {
 				setIsDraggingRuler(false);
@@ -208,7 +207,6 @@ export function useTimelinePlayhead({
 		};
 	}, [
 		isScrubbing,
-		scrubTime,
 		seek,
 		handleScrub,
 		isDraggingRuler,

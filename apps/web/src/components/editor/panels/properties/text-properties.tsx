@@ -24,6 +24,8 @@ import {
 	DEFAULT_LINE_HEIGHT,
 	DEFAULT_TEXT_BACKGROUND,
 	DEFAULT_TEXT_ELEMENT,
+	DEFAULT_TEXT_SHADOW,
+	DEFAULT_TEXT_STROKE,
 	MAX_FONT_SIZE,
 	MIN_FONT_SIZE,
 } from "@/constants/text-constants";
@@ -31,7 +33,7 @@ import { usePropertyDraft } from "./hooks/use-property-draft";
 import { useKeyframedColorProperty } from "./hooks/use-keyframed-color-property";
 import { useKeyframedNumberProperty } from "./hooks/use-keyframed-number-property";
 import { useElementPlayhead } from "./hooks/use-element-playhead";
-import { TransformSection, BlendingSection } from "./sections";
+import { TransformSection, BlendingSection, AnimationsSection, AdjustSection } from "./sections";
 import { KeyframeToggle } from "./keyframe-toggle";
 import { isPropertyAtDefault } from "./sections/transform";
 import { resolveColorAtTime, resolveNumberAtTime } from "@/lib/animation";
@@ -41,8 +43,10 @@ import {
 	ViewIcon,
 	ViewOffSlashIcon,
 } from "@hugeicons/core-free-icons";
-import { OcTextHeightIcon, OcTextWidthIcon } from "@opencut/ui/icons";
+import { OcTextHeightIcon, OcTextWidthIcon } from "@kurvo/ui/icons";
 import { cn } from "@/utils/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CapCutSlider } from "@/components/ui/capcut-slider";
 
 export function TextProperties({
 	element,
@@ -52,15 +56,34 @@ export function TextProperties({
 	trackId: string;
 }) {
 	return (
-		<div className="flex h-full flex-col">
-			<ContentSection element={element} trackId={trackId} />
-			<TransformSection element={element} trackId={trackId} />
-			<BlendingSection element={element} trackId={trackId} />
-			<TypographySection element={element} trackId={trackId} />
-			<SpacingSection element={element} trackId={trackId} />
-			<BackgroundSection element={element} trackId={trackId} />
-		</div>
+		<Tabs defaultValue="text" className="flex h-full flex-col">
+			<div className="flex-none px-4 pt-3 border-b border-white/5 bg-white/[0.02]">
+				<TabsList className="flex h-9 w-full justify-start bg-transparent p-0 gap-4 overflow-x-auto scrollbar-hidden">
+					<TabsTrigger value="text" className="flex-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 data-[state=active]:text-white rounded-none border-b-2 border-transparent px-1 pb-2 pt-1 h-9 text-[11px] font-bold uppercase tracking-wider text-white/40 w-auto whitespace-nowrap transition-all hover:text-white/80">Text</TabsTrigger>
+					<TabsTrigger value="animation" className="flex-none data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-violet-500 data-[state=active]:text-white rounded-none border-b-2 border-transparent px-1 pb-2 pt-1 h-9 text-[11px] font-bold uppercase tracking-wider text-white/40 w-auto whitespace-nowrap transition-all hover:text-white/80">Animation</TabsTrigger>
+				</TabsList>
+			</div>
+
+			<div className="flex-1 overflow-y-auto min-h-0">
+				<TabsContent value="text" className="m-0 outline-none">
+					<ContentSection element={element} trackId={trackId} />
+					<TypographySection element={element} trackId={trackId} />
+					<SpacingSection element={element} trackId={trackId} />
+					<BackgroundSection element={element} trackId={trackId} />
+					<StrokeSection element={element} trackId={trackId} />
+					<ShadowSection element={element} trackId={trackId} />
+					<TransformSection element={element} trackId={trackId} />
+					<AdjustSection element={element} trackId={trackId} />
+					<BlendingSection element={element} trackId={trackId} />
+				</TabsContent>
+
+				<TabsContent value="animation" className="m-0 outline-none">
+					<AnimationsSection element={element} trackId={trackId} />
+				</TabsContent>
+			</div>
+		</Tabs>
 	);
+
 }
 
 function ContentSection({
@@ -157,46 +180,72 @@ function TypographySection({
 			<SectionContent>
 				<SectionFields>
 					<SectionField label="Font">
-						<FontPicker
-							defaultValue={element.fontFamily}
-							onValueChange={(value) =>
-								editor.timeline.updateElements({
-									updates: [
-										{
-											trackId,
-											elementId: element.id,
-											updates: { fontFamily: value },
-										},
-									],
-								})
-							}
-						/>
+						<div className="flex flex-col gap-2">
+							<FontPicker
+								defaultValue={element.fontFamily}
+								onValueChange={(value) =>
+									editor.timeline.updateElements({
+										updates: [{ trackId, elementId: element.id, updates: { fontFamily: value } }],
+									})
+								}
+							/>
+							<div className="flex items-center gap-1 mt-1 justify-start">
+								<Button
+									variant={element.fontWeight === "bold" ? "secondary" : "ghost"}
+									size="icon"
+									className="w-8 h-8 rounded-md"
+									onClick={() => editor.timeline.updateElements({
+										updates: [{ trackId, elementId: element.id, updates: { fontWeight: element.fontWeight === "bold" ? "normal" : "bold" } }]
+									})}
+								>
+									<span className="font-bold font-serif text-sm">B</span>
+								</Button>
+								<Button
+									variant={element.fontStyle === "italic" ? "secondary" : "ghost"}
+									size="icon"
+									className="w-8 h-8 rounded-md"
+									onClick={() => editor.timeline.updateElements({
+										updates: [{ trackId, elementId: element.id, updates: { fontStyle: element.fontStyle === "italic" ? "normal" : "italic" } }]
+									})}
+								>
+									<span className="italic font-serif text-sm">I</span>
+								</Button>
+								<Button
+									variant={element.textDecoration === "underline" ? "secondary" : "ghost"}
+									size="icon"
+									className="w-8 h-8 rounded-md"
+									onClick={() => editor.timeline.updateElements({
+										updates: [{ trackId, elementId: element.id, updates: { textDecoration: element.textDecoration === "underline" ? "none" : "underline" } }]
+									})}
+								>
+									<span className="underline font-serif text-sm">U</span>
+								</Button>
+								<Button
+									variant={element.textDecoration === "line-through" ? "secondary" : "ghost"}
+									size="icon"
+									className="w-8 h-8 rounded-md"
+									onClick={() => editor.timeline.updateElements({
+										updates: [{ trackId, elementId: element.id, updates: { textDecoration: element.textDecoration === "line-through" ? "none" : "line-through" } }]
+									})}
+								>
+									<span className="line-through font-serif text-sm">S</span>
+								</Button>
+							</div>
+						</div>
 					</SectionField>
-					<SectionField label="Size">
-						<NumberField
-							value={fontSize.displayValue}
-							min={MIN_FONT_SIZE}
-							max={MAX_FONT_SIZE}
-							onFocus={fontSize.onFocus}
-							onChange={fontSize.onChange}
-							onBlur={fontSize.onBlur}
-							onScrub={fontSize.scrubTo}
-							onScrubEnd={fontSize.commitScrub}
-							onReset={() =>
-								editor.timeline.updateElements({
-									updates: [
-										{
-											trackId,
-											elementId: element.id,
-											updates: { fontSize: DEFAULT_TEXT_ELEMENT.fontSize },
-										},
-									],
-								})
-							}
-							isDefault={element.fontSize === DEFAULT_TEXT_ELEMENT.fontSize}
-							icon={<HugeiconsIcon icon={TextFontIcon} />}
-						/>
-					</SectionField>
+					<div className="flex flex-col gap-1 w-full pl-2">
+						<div className="flex items-center w-full relative group pr-2">
+							<CapCutSlider
+								label="Size"
+								value={Math.round(parseFloat(fontSize.displayValue))}
+								min={MIN_FONT_SIZE}
+								max={MAX_FONT_SIZE}
+								onChange={(val) => fontSize.onChange({ target: { value: val.toString() } } as React.ChangeEvent<HTMLInputElement>)}
+								onFocus={fontSize.onFocus}
+								onBlur={fontSize.onBlur}
+							/>
+						</div>
+					</div>
 					<SectionField
 						label="Color"
 						beforeLabel={
@@ -271,59 +320,30 @@ function SpacingSection({
 				<SectionTitle>Spacing</SectionTitle>
 			</SectionHeader>
 			<SectionContent>
-				<div className="flex items-start gap-2">
-					<SectionField label="Letter spacing" className="w-1/2">
-						<NumberField
-							value={letterSpacing.displayValue}
+				<div className="flex flex-col gap-1 w-full pl-2">
+					<div className="flex items-center w-full relative group pr-2">
+						<CapCutSlider
+							label="Character"
+							value={Math.round(parseFloat(letterSpacing.displayValue))}
+							min={-50}
+							max={100}
+							onChange={(val) => letterSpacing.onChange({ target: { value: val.toString() } } as React.ChangeEvent<HTMLInputElement>)}
 							onFocus={letterSpacing.onFocus}
-							onChange={letterSpacing.onChange}
 							onBlur={letterSpacing.onBlur}
-							onScrub={letterSpacing.scrubTo}
-							onScrubEnd={letterSpacing.commitScrub}
-							onReset={() =>
-								editor.timeline.updateElements({
-									updates: [
-										{
-											trackId,
-											elementId: element.id,
-											updates: { letterSpacing: DEFAULT_LETTER_SPACING },
-										},
-									],
-								})
-							}
-							isDefault={
-								(element.letterSpacing ?? DEFAULT_LETTER_SPACING) ===
-								DEFAULT_LETTER_SPACING
-							}
-							icon={<OcTextWidthIcon size={14} />}
 						/>
-					</SectionField>
-					<SectionField label="Line height" className="w-1/2">
-						<NumberField
-							value={lineHeight.displayValue}
+					</div>
+					<div className="flex items-center w-full relative group pr-2 pb-2">
+						<CapCutSlider
+							label="Line"
+							value={Math.round(parseFloat(lineHeight.displayValue) * 10) / 10}
+							min={0.1}
+							max={5}
+							step={0.1}
+							onChange={(val) => lineHeight.onChange({ target: { value: val.toString() } } as React.ChangeEvent<HTMLInputElement>)}
 							onFocus={lineHeight.onFocus}
-							onChange={lineHeight.onChange}
 							onBlur={lineHeight.onBlur}
-							onScrub={lineHeight.scrubTo}
-							onScrubEnd={lineHeight.commitScrub}
-							onReset={() =>
-								editor.timeline.updateElements({
-									updates: [
-										{
-											trackId,
-											elementId: element.id,
-											updates: { lineHeight: DEFAULT_LINE_HEIGHT },
-										},
-									],
-								})
-							}
-							isDefault={
-								(element.lineHeight ?? DEFAULT_LINE_HEIGHT) ===
-								DEFAULT_LINE_HEIGHT
-							}
-							icon={<OcTextHeightIcon size={14} />}
 						/>
-					</SectionField>
+					</div>
 				</div>
 			</SectionContent>
 		</Section>
@@ -725,6 +745,110 @@ function BackgroundSection({
 							})}
 						/>
 					</SectionField>
+				</SectionFields>
+			</SectionContent>
+		</Section>
+	);
+}
+
+function StrokeSection({ element, trackId }: { element: TextElement; trackId: string; }) {
+	const editor = useEditor();
+	const stroke = element.stroke ?? DEFAULT_TEXT_STROKE;
+
+	const toggleStrokeEnabled = () => {
+		editor.timeline.updateElements({
+			updates: [{ trackId, elementId: element.id, updates: { stroke: { ...stroke, enabled: !stroke.enabled } } }]
+		});
+	};
+
+	return (
+		<Section collapsible defaultOpen={stroke.enabled} sectionKey="text:stroke">
+			<SectionHeader trailing={<Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleStrokeEnabled(); }}><HugeiconsIcon icon={stroke.enabled ? ViewIcon : ViewOffSlashIcon} /></Button>}>
+				<SectionTitle>Stroke</SectionTitle>
+			</SectionHeader>
+			<SectionContent className={cn(!stroke.enabled && "pointer-events-none opacity-50")}>
+				<SectionFields>
+					<SectionField label="Color">
+						<ColorPicker
+							value={stroke.color.replace("#", "")}
+							onChange={(color) => {
+								const hexColor = `#${color}`;
+								editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { stroke: { ...stroke, color: hexColor } } }] });
+							}}
+						/>
+					</SectionField>
+					<div className="flex flex-col gap-1 w-full pl-2">
+						<div className="flex items-center w-full relative group pr-2">
+							<CapCutSlider
+								label="Thickness"
+								value={stroke.thickness}
+								min={1}
+								max={100}
+								onChange={(val) => editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { stroke: { ...stroke, thickness: val } } }] })}
+							/>
+						</div>
+					</div>
+				</SectionFields>
+			</SectionContent>
+		</Section>
+	);
+}
+
+function ShadowSection({ element, trackId }: { element: TextElement; trackId: string; }) {
+	const editor = useEditor();
+	const shadow = element.shadow ?? DEFAULT_TEXT_SHADOW;
+
+	const toggleShadowEnabled = () => {
+		editor.timeline.updateElements({
+			updates: [{ trackId, elementId: element.id, updates: { shadow: { ...shadow, enabled: !shadow.enabled } } }]
+		});
+	};
+
+	return (
+		<Section collapsible defaultOpen={shadow.enabled} sectionKey="text:shadow">
+			<SectionHeader trailing={<Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleShadowEnabled(); }}><HugeiconsIcon icon={shadow.enabled ? ViewIcon : ViewOffSlashIcon} /></Button>}>
+				<SectionTitle>Shadow</SectionTitle>
+			</SectionHeader>
+			<SectionContent className={cn(!shadow.enabled && "pointer-events-none opacity-50")}>
+				<SectionFields>
+					<SectionField label="Color">
+						<ColorPicker
+							value={shadow.color.replace("#", "")}
+							onChange={(color) => {
+								const hexColor = `#${color}`;
+								editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { shadow: { ...shadow, color: hexColor } } }] });
+							}}
+						/>
+					</SectionField>
+					<div className="flex flex-col gap-1 w-full pl-2 pb-2">
+						<div className="flex items-center w-full relative group pr-2 pb-2">
+							<CapCutSlider
+								label="Blur"
+								value={shadow.blur}
+								min={0}
+								max={100}
+								onChange={(val) => editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { shadow: { ...shadow, blur: val } } }] })}
+							/>
+						</div>
+						<div className="flex items-center w-full relative group pr-2 pb-2">
+							<CapCutSlider
+								label="Distance"
+								value={shadow.distance}
+								min={0}
+								max={100}
+								onChange={(val) => editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { shadow: { ...shadow, distance: val } } }] })}
+							/>
+						</div>
+						<div className="flex items-center w-full relative group pr-2">
+							<CapCutSlider
+								label="Angle"
+								value={shadow.angle}
+								min={0}
+								max={360}
+								onChange={(val) => editor.timeline.updateElements({ updates: [{ trackId, elementId: element.id, updates: { shadow: { ...shadow, angle: val } } }] })}
+							/>
+						</div>
+					</div>
 				</SectionFields>
 			</SectionContent>
 		</Section>

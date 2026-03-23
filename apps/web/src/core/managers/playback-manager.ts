@@ -8,6 +8,7 @@ export class PlaybackManager {
 	private previousVolume = 1;
 	private isScrubbing = false;
 	private listeners = new Set<() => void>();
+	private timeListeners = new Set<(time: number) => void>();
 	private playbackTimer: number | null = null;
 	private lastUpdate = 0;
 
@@ -24,13 +25,13 @@ export class PlaybackManager {
 
 		this.isPlaying = true;
 		this.startTimer();
-		this.notify();
+		this.notifyState();
 	}
 
 	pause(): void {
 		this.isPlaying = false;
 		this.stopTimer();
-		this.notify();
+		this.notifyState();
 	}
 
 	toggle(): void {
@@ -44,7 +45,7 @@ export class PlaybackManager {
 	seek({ time }: { time: number }): void {
 		const duration = this.editor.timeline.getTotalDuration();
 		this.currentTime = Math.max(0, Math.min(duration, time));
-		this.notify();
+		this.notifyTime(this.currentTime);
 
 		window.dispatchEvent(
 			new CustomEvent("playback-seek", {
@@ -60,7 +61,7 @@ export class PlaybackManager {
 		if (clampedVolume > 0) {
 			this.previousVolume = clampedVolume;
 		}
-		this.notify();
+		this.notifyState();
 	}
 
 	mute(): void {
@@ -69,13 +70,13 @@ export class PlaybackManager {
 		}
 		this.muted = true;
 		this.volume = 0;
-		this.notify();
+		this.notifyState();
 	}
 
 	unmute(): void {
 		this.muted = false;
 		this.volume = this.previousVolume;
-		this.notify();
+		this.notifyState();
 	}
 
 	toggleMute(): void {
@@ -104,7 +105,7 @@ export class PlaybackManager {
 
 	setScrubbing({ isScrubbing }: { isScrubbing: boolean }): void {
 		this.isScrubbing = isScrubbing;
-		this.notify();
+		this.notifyState();
 	}
 
 	getIsScrubbing(): boolean {
@@ -116,8 +117,17 @@ export class PlaybackManager {
 		return () => this.listeners.delete(listener);
 	}
 
-	private notify(): void {
+	subscribeTime(listener: (time: number) => void): () => void {
+		this.timeListeners.add(listener);
+		return () => this.timeListeners.delete(listener);
+	}
+
+	private notifyState(): void {
 		this.listeners.forEach((fn) => fn());
+	}
+
+	private notifyTime(time: number): void {
+		this.timeListeners.forEach((fn) => fn(time));
 	}
 
 	private startTimer(): void {
@@ -149,7 +159,8 @@ export class PlaybackManager {
 		if (duration > 0 && newTime >= duration) {
 			this.pause();
 			this.currentTime = duration;
-			this.notify();
+			this.notifyState();
+			this.notifyTime(duration);
 
 			window.dispatchEvent(
 				new CustomEvent("playback-seek", {
@@ -158,7 +169,7 @@ export class PlaybackManager {
 			);
 		} else {
 			this.currentTime = newTime;
-			this.notify();
+			this.notifyTime(newTime);
 
 			window.dispatchEvent(
 				new CustomEvent("playback-update", {

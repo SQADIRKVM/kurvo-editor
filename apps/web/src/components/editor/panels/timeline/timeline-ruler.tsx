@@ -104,7 +104,7 @@ export function TimelineRuler({
 			aria-valuemin={0}
 			aria-valuemax={effectiveDuration}
 			aria-valuenow={0}
-			className="relative h-4 flex-1 overflow-x-visible"
+			className="relative h-6 flex-1 overflow-x-visible border-b border-white/5"
 			onWheel={handleWheel}
 			onClick={handleTimelineContentClick}
 			onMouseDown={handleRulerTrackingMouseDown}
@@ -113,7 +113,7 @@ export function TimelineRuler({
 			<div
 				role="none"
 				ref={rulerRef}
-				className="relative h-4 cursor-default select-none"
+				className="relative h-6 cursor-default select-none"
 				style={{
 					width: `${dynamicTimelineWidth}px`,
 				}}

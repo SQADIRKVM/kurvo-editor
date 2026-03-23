@@ -1,4 +1,5 @@
 import { useEditor } from "@/hooks/use-editor";
+import { useCurrentTime } from "@/hooks/use-current-time";
 import { getElementLocalTime } from "@/lib/animation";
 import { TIME_EPSILON_SECONDS } from "@/constants/animation-constants";
 
@@ -10,7 +11,7 @@ export function useElementPlayhead({
 	duration: number;
 }) {
 	const editor = useEditor();
-	const playheadTime = editor.playback.getCurrentTime();
+	const playheadTime = useCurrentTime();
 	const localTime = getElementLocalTime({
 		timelineTime: playheadTime,
 		elementStartTime: startTime,

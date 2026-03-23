@@ -108,7 +108,12 @@ export function useSoundSearch({
 						setTotalCount({ count: data.count });
 						setCurrentPage({ page: 1 });
 					} else {
-						setSearchError({ error: `Search failed: ${response.status}` });
+						if (response.status === 401) {
+							const errorData = await response.json().catch(() => ({}));
+							setSearchError({ error: errorData.message || "Sounds API not configured" });
+						} else {
+							setSearchError({ error: `Search failed: ${response.status}` });
+						}
 					}
 				}
 			} catch (err) {

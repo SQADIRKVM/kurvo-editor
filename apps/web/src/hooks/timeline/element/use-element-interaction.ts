@@ -9,6 +9,7 @@ import {
 import { useEditor } from "@/hooks/use-editor";
 import { useShiftKey } from "@/hooks/use-shift-key";
 import { useTimelineStore } from "@/stores/timeline-store";
+import { useTimelineDragStore } from "@/stores/timeline-drag-store";
 import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
 import {
 	DRAG_THRESHOLD_PX,
@@ -41,17 +42,7 @@ interface UseElementInteractionProps {
 
 const MOUSE_BUTTON_RIGHT = 2;
 
-const initialDragState: ElementDragState = {
-	isDragging: false,
-	elementId: null,
-	trackId: null,
-	startMouseX: 0,
-	startMouseY: 0,
-	startElementTime: 0,
-	clickOffsetTime: 0,
-	currentTime: 0,
-	currentMouseY: 0,
-};
+// Removed initialDragState as it's now in the store
 
 interface PendingDragState {
 	elementId: string;
@@ -174,9 +165,11 @@ export function useElementInteraction({
 		handleElementClick: handleSelectionClick,
 	} = useElementSelection();
 
-	const [dragState, setDragState] =
-		useState<ElementDragState>(initialDragState);
-	const [dragDropTarget, setDragDropTarget] = useState<DropTarget | null>(null);
+	const isDragging = useTimelineDragStore((s) => s.dragState.isDragging);
+	const setDragState = useTimelineDragStore((s) => s.setDragState);
+	const setDragDropTarget = useTimelineDragStore((s) => s.setDragDropTarget);
+	const endDrag = useTimelineDragStore((s) => s.endDrag);
+
 	const [isPendingDrag, setIsPendingDrag] = useState(false);
 	const pendingDragRef = useRef<PendingDragState | null>(null);
 	const lastMouseXRef = useRef(0);
@@ -208,10 +201,7 @@ export function useElementInteraction({
 		[],
 	);
 
-	const endDrag = useCallback(() => {
-		setDragState(initialDragState);
-		setDragDropTarget(null);
-	}, []);
+	// endDrag is provided by the store
 
 	const getDragSnapResult = useCallback(
 		({
@@ -264,7 +254,7 @@ export function useElementInteraction({
 	);
 
 	useEffect(() => {
-		if (!dragState.isDragging && !isPendingDrag) return;
+		if (!isDragging && !isPendingDrag) return;
 
 		const handleMouseMove = ({ clientX, clientY }: MouseEvent) => {
 			let startedDragThisEvent = false;
@@ -310,6 +300,8 @@ export function useElementInteraction({
 			if (startedDragThisEvent) {
 				return;
 			}
+
+			const dragState = useTimelineDragStore.getState().dragState;
 
 			if (dragState.elementId && dragState.trackId) {
 				const alreadySelected = isElementSelected({
@@ -378,11 +370,7 @@ export function useElementInteraction({
 		document.addEventListener("mousemove", handleMouseMove);
 		return () => document.removeEventListener("mousemove", handleMouseMove);
 	}, [
-		dragState.isDragging,
-		dragState.clickOffsetTime,
-		dragState.elementId,
-		dragState.startMouseY,
-		dragState.trackId,
+		isDragging,
 		zoomLevel,
 		isElementSelected,
 		selectElement,
@@ -399,9 +387,10 @@ export function useElementInteraction({
 	]);
 
 	useEffect(() => {
-		if (!dragState.isDragging) return;
+		if (!isDragging) return;
 
 		const handleMouseUp = ({ clientX, clientY }: MouseEvent) => {
+			const dragState = useTimelineDragStore.getState().dragState;
 			if (!dragState.elementId || !dragState.trackId) return;
 
 			if (mouseDownLocationRef.current) {
@@ -480,11 +469,7 @@ export function useElementInteraction({
 		document.addEventListener("mouseup", handleMouseUp);
 		return () => document.removeEventListener("mouseup", handleMouseUp);
 	}, [
-		dragState.isDragging,
-		dragState.elementId,
-		dragState.startMouseY,
-		dragState.trackId,
-		dragState.currentTime,
+		isDragging,
 		zoomLevel,
 		tracks,
 		endDrag,
@@ -608,8 +593,6 @@ export function useElementInteraction({
 	);
 
 	return {
-		dragState,
-		dragDropTarget,
 		handleElementMouseDown,
 		handleElementClick,
 		lastMouseXRef,

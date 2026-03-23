@@ -40,6 +40,7 @@ import {
 	ReorderClipEffectsCommand,
 	UpsertEffectParamKeyframeCommand,
 	RemoveEffectParamKeyframeCommand,
+	DetachAudioCommand,
 } from "@/lib/commands/timeline";
 import { BatchCommand, PreviewTracker } from "@/lib/commands";
 import type { InsertElementParams } from "@/lib/commands/timeline/element/insert-element";
@@ -590,6 +591,15 @@ export class TimelineManager {
 		elements: { trackId: string; elementId: string }[];
 	}): void {
 		const command = new ToggleElementsMutedCommand(elements);
+		this.editor.command.execute({ command });
+	}
+
+	detachAudio({
+		elements,
+	}: {
+		elements: { trackId: string; elementId: string }[];
+	}): void {
+		const command = new DetachAudioCommand(elements);
 		this.editor.command.execute({ command });
 	}
 

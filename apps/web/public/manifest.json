@@ -1,6 +1,6 @@
 {
-	"name": "OpenCut",
-	"description": "A simple but powerful video editor that gets the job done. In your browser.",
+	"name": "Kurvo",
+	"description": "Extraordinary video editing in your browser.",
 	"display": "standalone",
 	"start_url": "/",
 	"icons": [

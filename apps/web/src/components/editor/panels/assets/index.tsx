@@ -2,7 +2,10 @@
 
 import { Separator } from "@/components/ui/separator";
 import { type Tab, useAssetsPanelStore } from "@/stores/assets-panel-store";
-import { TabBar } from "./tabbar";
+import { PanelView } from "./views/base-view";
+import { EmptyState } from "@/components/ui/empty-state";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Image02Icon, GridViewIcon } from "@hugeicons/core-free-icons";
 import { Captions } from "./views/captions";
 import { MediaView } from "./views/assets";
 import { SettingsView } from "./views/settings";
@@ -10,6 +13,9 @@ import { SoundsView } from "./views/sounds";
 import { StickersView } from "./views/stickers";
 import { TextView } from "./views/text";
 import { EffectsView } from "./views/effects";
+import { TransitionsView } from "./views/transitions";
+import { AdjustmentView } from "./views/adjustment";
+import { FiltersView } from "./views/filters";
 
 export function AssetsPanel() {
 	const { activeTab } = useAssetsPanelStore();
@@ -20,29 +26,15 @@ export function AssetsPanel() {
 		text: <TextView />,
 		stickers: <StickersView />,
 		effects: <EffectsView />,
-		transitions: (
-			<div className="text-muted-foreground p-4">
-				Transitions view coming soon...
-			</div>
-		),
+		transitions: <TransitionsView />,
 		captions: <Captions />,
-		filters: (
-			<div className="text-muted-foreground p-4">
-				Filters view coming soon...
-			</div>
-		),
-		adjustment: (
-			<div className="text-muted-foreground p-4">
-				Adjustment view coming soon...
-			</div>
-		),
+		filters: <FiltersView />,
+		adjustment: <AdjustmentView />,
 		settings: <SettingsView />,
 	};
 
 	return (
-		<div className="panel bg-background flex h-full rounded-sm border overflow-hidden">
-			<TabBar />
-			<Separator orientation="vertical" />
+		<div className="panel bg-transparent flex h-full overflow-hidden">
 			<div className="flex-1 overflow-hidden">{viewMap[activeTab]}</div>
 		</div>
 	);

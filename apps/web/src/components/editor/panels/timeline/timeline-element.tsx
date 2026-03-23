@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback } from "react";
+
 import { useEditor } from "@/hooks/use-editor";
 import { useAssetsPanelStore } from "@/stores/assets-panel-store";
 import AudioWaveform from "./audio-waveform";
@@ -48,10 +50,12 @@ import {
 	VolumeHighIcon,
 	VolumeOffIcon,
 	VolumeMute02Icon,
+	HeadphonesIcon,
 	Search01Icon,
 	Exchange01Icon,
 	KeyframeIcon,
 	MagicWand05Icon,
+	Snowflake,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { uppercase } from "@/utils/string";
@@ -60,6 +64,8 @@ import type { SelectedKeyframeRef, ElementKeyframe } from "@/types/animation";
 import { cn } from "@/utils/ui";
 import { Button } from "@/components/ui/button";
 import { usePropertiesStore } from "@/stores/properties-store";
+import { useTimelineDragStore, initialDragState, type TimelineDragStore } from "@/stores/timeline-drag-store";
+import { useFreezeFrame } from "@/hooks/use-freeze-frame";
 
 const KEYFRAME_INDICATOR_MIN_WIDTH_PX = 40;
 const ELEMENT_RING_WIDTH_PX = 1.5;
@@ -179,7 +185,6 @@ interface TimelineElementProps {
 		event: React.MouseEvent,
 		element: TimelineElementType,
 	) => void;
-	dragState: ElementDragState;
 	isDropTarget?: boolean;
 }
 
@@ -192,12 +197,22 @@ export function TimelineElement({
 	onResizeStateChange,
 	onElementMouseDown,
 	onElementClick,
-	dragState,
 	isDropTarget = false,
 }: TimelineElementProps) {
+	const dragState = useTimelineDragStore(
+		useCallback(
+			(state: TimelineDragStore) =>
+				state.dragState.elementId === element.id
+					? state.dragState
+					: initialDragState,
+			[element.id],
+		),
+	);
+
 	const editor = useEditor();
 	const { selectedElements } = useElementSelection();
 	const { requestRevealMedia } = useAssetsPanelStore();
+	const { freezeFrame } = useFreezeFrame();
 
 	let mediaAsset: MediaAsset | null = null;
 
@@ -314,13 +329,34 @@ export function TimelineElement({
 				>
 					Split
 				</ActionMenuItem>
+				{element.type === "video" && (
+					<ContextMenuItem
+						icon={<HugeiconsIcon icon={Snowflake} />}
+						onClick={() => freezeFrame()}
+					>
+						Freeze Frame (3s)
+					</ContextMenuItem>
+				)}
 				<CopyMenuItem />
 				{canElementHaveAudio(element) && hasAudio && (
-					<MuteMenuItem
-						isMultipleSelected={selectedElements.length > 1}
-						isCurrentElementSelected={isCurrentElementSelected}
-						isMuted={isMuted}
-					/>
+					<>
+						<MuteMenuItem
+							isMultipleSelected={selectedElements.length > 1}
+							isCurrentElementSelected={isCurrentElementSelected}
+							isMuted={isMuted}
+						/>
+						<ContextMenuItem
+							icon={<HugeiconsIcon icon={HeadphonesIcon} />}
+							onClick={() => {
+								const elements = isCurrentElementSelected 
+									? selectedElements 
+									: [{ trackId: track.id, elementId: element.id }];
+								editor.timeline.detachAudio({ elements });
+							}}
+						>
+							Separate audio
+						</ContextMenuItem>
+					</>
 				)}
 				{canElementBeHidden(element) && (
 					<VisibilityMenuItem
@@ -769,6 +805,23 @@ const ELEMENT_CONTENT_RENDERERS: Record<
 			imageUrl: mediaAsset?.url,
 			track,
 		});
+	},
+	transition: ({ element }) => {
+		const transitionElement = element as Extract<
+			TimelineElementType,
+			{ type: "transition" }
+		>;
+		return (
+			<div className="flex size-full flex-col items-center justify-center bg-violet-500/20 px-2 py-1">
+				<HugeiconsIcon
+					icon={Exchange01Icon}
+					className="size-3.5 text-violet-300"
+				/>
+				<span className="mt-0.5 truncate text-[10px] font-medium text-violet-100/90 leading-tight">
+					{transitionElement.transitionType}
+				</span>
+			</div>
+		);
 	},
 };
 

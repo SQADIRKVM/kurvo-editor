@@ -30,11 +30,17 @@ export function resolveTransformAtTime({
 	animations,
 	localTime,
 }: {
-	baseTransform: Transform;
+	baseTransform: Transform | undefined;
 	animations: ElementAnimations | undefined;
 	localTime: number;
 }): Transform {
 	const safeLocalTime = Math.max(0, localTime);
+	
+	// Defensive fallbacks for missing or malformed transform data
+	const pos = baseTransform?.position ?? { x: 0, y: 0 };
+	const scale = baseTransform?.scale ?? 1;
+	const rotate = baseTransform?.rotate ?? 0;
+
 	return {
 		position: {
 			x: getNumberChannelValueAtTime({
@@ -43,7 +49,7 @@ export function resolveTransformAtTime({
 					propertyPath: "transform.position.x",
 				}),
 				time: safeLocalTime,
-				fallbackValue: baseTransform.position.x,
+				fallbackValue: pos.x,
 			}),
 			y: getNumberChannelValueAtTime({
 				channel: getNumberChannelForPath({
@@ -51,7 +57,7 @@ export function resolveTransformAtTime({
 					propertyPath: "transform.position.y",
 				}),
 				time: safeLocalTime,
-				fallbackValue: baseTransform.position.y,
+				fallbackValue: pos.y,
 			}),
 		},
 		scale: getNumberChannelValueAtTime({
@@ -60,7 +66,7 @@ export function resolveTransformAtTime({
 				propertyPath: "transform.scale",
 			}),
 			time: safeLocalTime,
-			fallbackValue: baseTransform.scale,
+			fallbackValue: scale,
 		}),
 		rotate: getNumberChannelValueAtTime({
 			channel: getNumberChannelForPath({
@@ -68,7 +74,7 @@ export function resolveTransformAtTime({
 				propertyPath: "transform.rotate",
 			}),
 			time: safeLocalTime,
-			fallbackValue: baseTransform.rotate,
+			fallbackValue: rotate,
 		}),
 	};
 }

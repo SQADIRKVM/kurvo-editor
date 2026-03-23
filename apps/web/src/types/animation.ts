@@ -12,6 +12,8 @@ export const ANIMATION_PROPERTY_PATHS = [
 	"background.offsetX",
 	"background.offsetY",
 	"background.cornerRadius",
+	"shadow.color",
+	"stroke.color",
 ] as const;
 
 export type AnimationPropertyPath = (typeof ANIMATION_PROPERTY_PATHS)[number];

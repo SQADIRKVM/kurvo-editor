@@ -46,21 +46,26 @@ function getVisualElementBounds({
 		rotate: number;
 	};
 }): ElementBounds {
+	const scale = transform?.scale ?? 1;
+	const posX = transform?.position?.x ?? 0;
+	const posY = transform?.position?.y ?? 0;
+	const rotate = transform?.rotate ?? 0;
+
 	const containScale = Math.min(
 		canvasWidth / sourceWidth,
 		canvasHeight / sourceHeight,
 	);
-	const scaledWidth = sourceWidth * containScale * transform.scale;
-	const scaledHeight = sourceHeight * containScale * transform.scale;
-	const cx = canvasWidth / 2 + transform.position.x;
-	const cy = canvasHeight / 2 + transform.position.y;
+	const scaledWidth = sourceWidth * containScale * scale;
+	const scaledHeight = sourceHeight * containScale * scale;
+	const cx = canvasWidth / 2 + posX;
+	const cy = canvasHeight / 2 + posY;
 
 	return {
 		cx,
 		cy,
 		width: scaledWidth,
 		height: scaledHeight,
-		rotation: transform.rotate,
+		rotation: rotate,
 	};
 }
 
