@@ -319,6 +319,7 @@ export function buildUploadAudioElement({
 		sourceDuration: duration,
 		volume: 1,
 		muted: false,
+		speed: 1,
 	};
 	if (buffer) {
 		element.buffer = buffer;
@@ -382,6 +383,7 @@ export function buildLibraryAudioElement({
 		sourceDuration: duration,
 		volume: 1,
 		muted: false,
+		speed: 1,
 	};
 	if (buffer) {
 		element.buffer = buffer;

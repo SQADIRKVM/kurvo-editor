@@ -7,7 +7,9 @@ let _db: ReturnType<typeof drizzle> | null = null;
 
 function getDb() {
 	if (!_db) {
-		const client = postgres(webEnv.DATABASE_URL);
+		const client = postgres(
+			webEnv.DATABASE_URL || "postgresql://localhost:5432/kurvo",
+		);
 		_db = drizzle(client, { schema });
 	}
 

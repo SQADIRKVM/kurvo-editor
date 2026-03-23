@@ -16,7 +16,7 @@ export default {
 		table: "drizzle_migrations",
 	},
 	dbCredentials: {
-		url: webEnv.DATABASE_URL,
+		url: webEnv.DATABASE_URL || "postgresql://localhost:5432/kurvo",
 	},
 	out: "./migrations",
 	strict: webEnv.NODE_ENV === "production",

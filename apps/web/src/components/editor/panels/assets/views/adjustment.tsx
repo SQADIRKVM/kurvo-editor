@@ -1,5 +1,6 @@
 "use client";
 
+import { nanoid } from "nanoid";
 import { useEditor } from "@/hooks/use-editor";
 import { useElementSelection } from "@/hooks/timeline/element/use-element-selection";
 import { PanelView } from "./base-view";
@@ -91,7 +92,7 @@ function AdjustmentSection({
 		} else {
 			// Add new effect if it doesn't exist
 			updatedEffects.push({
-				id: crypto.randomUUID(),
+				id: nanoid(),
 				type: effectType,
 				params: { 
 					...definition.params.reduce((acc, p) => ({ ...acc, [p.key]: p.default }), {}),

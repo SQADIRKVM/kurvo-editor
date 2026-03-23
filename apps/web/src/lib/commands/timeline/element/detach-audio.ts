@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Command } from "@/lib/commands/base-command";
 import type { TimelineTrack, AudioElement, VideoElement } from "@/types/timeline";
 import { canElementHaveAudio } from "@/lib/timeline/element-utils";
@@ -37,7 +38,7 @@ export class DetachAudioCommand extends Command {
 
 			// 2. Create audio element
 			const audioElement: AudioElement = {
-				id: crypto.randomUUID(),
+				id: nanoid(),
 				name: `${element.name} (Audio)`,
 				type: "audio",
 				mediaId: element.mediaId,
@@ -48,13 +49,14 @@ export class DetachAudioCommand extends Command {
 				trimEnd: element.trimEnd,
 				volume: 1,
 				muted: false,
+				speed: 1,
 				animations: { channels: {} },
 			};
 
 			// 3. Find or create an audio track
 			let audioTrack = updatedTracks.find(t => t.type === "audio");
 			if (!audioTrack) {
-				const newTrackId = crypto.randomUUID();
+				const newTrackId = nanoid();
 				audioTrack = {
 					id: newTrackId,
 					type: "audio",

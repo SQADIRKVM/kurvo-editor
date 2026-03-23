@@ -431,7 +431,7 @@ export function useTimelineDragDrop({
 					duration,
 					startTime: dropTarget.xPosition,
 					buffer:
-						asset.type === "audio"
+						asset.type === "audio" && typeof window !== "undefined"
 							? new AudioBuffer({ length: 1, sampleRate: 44100 })
 							: undefined,
 				});
@@ -478,8 +478,11 @@ export function useTimelineDragDrop({
 							target: currentTarget,
 							dragData: dragData as EffectDragData,
 						});
-					} else {
+					} else if (dragData.type === "media") {
 						executeMediaDrop({ target: currentTarget, dragData });
+					} else if (dragData.type === "transition") {
+						// Transitions are handled differently or coming soon
+						toast.info("Transition drops are coming soon!");
 					}
 				} else if (hasFiles) {
 					const scrollContainer = tracksScrollRef?.current;
